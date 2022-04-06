@@ -233,6 +233,69 @@ void MainWindow::slotFile_Info_GRIB () {
 
 }
 
+QString MainWindow::windData() {
+
+    QString dateWiseGrid = "";
+
+    std::set<time_t> sdates = gribReaderTop->getReader()->getListDates();
+    std::set<time_t>::iterator date_i;
+
+    for (date_i = sdates.begin(); date_i != sdates.end(); date_i++)
+    {
+        dateWiseGrid += Util::formatDateTimeLong(*date_i) + " : \n\n";
+        QVector<QVector<v_arrow>>* wind = gribReaderTop->getWindGridRecord(*date_i);
+
+        if (wind == NULL)
+            continue;
+
+        int Ni = (*wind).size();
+        int Nj = (*wind)[0].size();
+        for (int j = 0; j < Nj; j++)
+        {
+            for (int i = 0; i < Ni; i++)
+            {
+                valueIJ = "(" + QString::number((*wind)[i][j].first)
+                            + ", " + QString::number((*wind)[i][j].second) + ")";
+                dateWiseGrid += valueIJ + " ";
+            }
+            dateWiseGrid += "\n";
+        }
+        dateWiseGrid += "\n\n";
+    }
+    return dateWiseGrid;
+}
+
+QString MainWindow::currentData() {
+
+    QString dateWiseGrid = "";
+
+    std::set<time_t> sdates = gribReaderTop->getReader()->getListDates();
+    std::set<time_t>::iterator date_i;
+
+    for (date_i = sdates.begin(); date_i != sdates.end(); date_i++)
+    {
+        dateWiseGrid += Util::formatDateTimeLong(*date_i) + " : \n\n";
+        QVector<QVector<v_arrow>>* current = gribReaderTop->getCurrentGridRecord(*date_i);
+
+        if (current == NULL)
+            continue;
+
+        int Ni = (*current).size();
+        int Nj = (*current)[0].size();
+        for (int j = 0; j < Nj; j++)
+        {
+            for (int i = 0; i < Ni; i++)
+            {
+                valueIJ = "(" + QString::number((*current)[i][j].first)
+                            + ", " + QString::number((*current)[i][j].second) + ")";
+                dateWiseGrid += valueIJ + " ";
+            }
+            dateWiseGrid += "\n";
+        }
+        dateWiseGrid += "\n\n";
+    }
+    return dateWiseGrid;
+}
 
 void MainWindow::createActions () {
     QMenu *fileMenu = menuBar()->addMenu("File");

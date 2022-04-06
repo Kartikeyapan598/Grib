@@ -36,6 +36,15 @@ public:
     GribRecord *getWindDRecord(time_t dataDate);
     QVector<QVector<v_arrow>> *getWindGridRecord (time_t dataDate);
 
+
+    GribRecord *getCurrentXRecord(time_t dataDate);
+    GribRecord *getCurrentSRecord(time_t dataDate);
+    GribRecord *getCurrentYRecord(time_t dataDate);
+    GribRecord *getCurrentDRecord(time_t dataDate);
+    QVector<QVector<v_arrow>> *getCurrentGridRecord (time_t dataDate);
+
+
+
     virtual bool  isReaderOk() const
                     {return gribRead!=nullptr && gribRead->isOk();}
     virtual bool  isReaderOkT() const

@@ -218,6 +218,236 @@ std::set<DataCode> GribReaderTop::getAllDataCode () const
     return gribRead->getAllDataCode ();
 }
 
+
+
+// Get current on date - dataDate
+
+GribRecord* GribReaderTop::getCurrentXRecord(time_t dataDate) {
+
+    Altitude currentAltitude;
+
+    if (gribRead->hasData (DataCode(GRB_PRV_CUR_XY2D, LV_GND_SURF,0))) {
+        currentAltitude = Altitude (LV_GND_SURF,0);
+    } else if (gribRead->hasData (DataCode(GRB_PRV_CUR_XY2D, LV_BLW_SURF,1))) {
+        currentAltitude = Altitude (LV_BLW_SURF,1);
+    } else if (gribRead->hasData (DataCode(GRB_PRV_CUR_XY2D, LV_BLW_SURF,2))) {
+        currentAltitude = Altitude (LV_BLW_SURF,2);
+    } else if (gribRead->hasData (DataCode(GRB_PRV_CUR_XY2D, LV_BLW_SURF,3))) {
+        currentAltitude = Altitude (LV_BLW_SURF,3);
+    }
+    else if (gribRead->hasData (DataCode(GRB_CUR_SPEED, LV_GND_SURF,0))
+     && gribRead->hasData (DataCode(GRB_CUR_DIR, LV_GND_SURF,0)) )
+    {
+        currentAltitude = Altitude (LV_GND_SURF,0);
+    }
+
+    GribRecord *recx = gribRead->getRecord
+                                (DataCode(GRB_CUR_VX,currentAltitude),dataDate);
+    GribRecord *recy = gribRead->getRecord
+                                (DataCode(GRB_CUR_VY,currentAltitude),dataDate);
+
+    if (recx == NULL || recy == NULL)
+        return NULL;
+
+    return recx;
+}
+
+GribRecord* GribReaderTop::getCurrentSRecord(time_t dataDate) {
+
+    bool flag = false;
+
+    Altitude currentAltitude;
+
+    if (gribRead->hasData (DataCode(GRB_PRV_CUR_XY2D, LV_GND_SURF,0))) {
+        currentAltitude = Altitude (LV_GND_SURF,0);
+    } else if (gribRead->hasData (DataCode(GRB_PRV_CUR_XY2D, LV_BLW_SURF,1))) {
+        currentAltitude = Altitude (LV_BLW_SURF,1);
+    } else if (gribRead->hasData (DataCode(GRB_PRV_CUR_XY2D, LV_BLW_SURF,2))) {
+        currentAltitude = Altitude (LV_BLW_SURF,2);
+    } else if (gribRead->hasData (DataCode(GRB_PRV_CUR_XY2D, LV_BLW_SURF,3))) {
+        currentAltitude = Altitude (LV_BLW_SURF,3);
+    }
+    else if (gribRead->hasData (DataCode(GRB_CUR_SPEED, LV_GND_SURF,0))
+     && gribRead->hasData (DataCode(GRB_CUR_DIR, LV_GND_SURF,0)) )
+    {
+        currentAltitude = Altitude (LV_GND_SURF,0);
+    }
+
+    GribRecord *recx = gribRead->getRecord
+                                (DataCode(GRB_CUR_VX,currentAltitude),dataDate);
+    GribRecord *recy = gribRead->getRecord
+                                (DataCode(GRB_CUR_VY,currentAltitude),dataDate);
+
+    if (recx == NULL || recy == NULL) {
+
+        flag = true;
+        recx = gribRead->getRecord
+                           (DataCode(GRB_CUR_SPEED,currentAltitude),dataDate);
+    }
+
+    if (recx == NULL || recy == NULL)
+        return NULL;
+
+    return flag ? recx : NULL;
+}
+
+GribRecord* GribReaderTop::getCurrentYRecord (time_t dataDate) {
+
+    Altitude currentAltitude;
+
+    if (gribRead->hasData (DataCode(GRB_PRV_CUR_XY2D, LV_GND_SURF,0))) {
+        currentAltitude = Altitude (LV_GND_SURF,0);
+    } else if (gribRead->hasData (DataCode(GRB_PRV_CUR_XY2D, LV_BLW_SURF,1))) {
+        currentAltitude = Altitude (LV_BLW_SURF,1);
+    } else if (gribRead->hasData (DataCode(GRB_PRV_CUR_XY2D, LV_BLW_SURF,2))) {
+        currentAltitude = Altitude (LV_BLW_SURF,2);
+    } else if (gribRead->hasData (DataCode(GRB_PRV_CUR_XY2D, LV_BLW_SURF,3))) {
+        currentAltitude = Altitude (LV_BLW_SURF,3);
+    }
+    else if (gribRead->hasData (DataCode(GRB_CUR_SPEED, LV_GND_SURF,0))
+     && gribRead->hasData (DataCode(GRB_CUR_DIR, LV_GND_SURF,0)) )
+    {
+        currentAltitude = Altitude (LV_GND_SURF,0);
+    }
+
+    GribRecord *recx = gribRead->getRecord
+                                (DataCode(GRB_CUR_VX,currentAltitude),dataDate);
+    GribRecord *recy = gribRead->getRecord
+                                (DataCode(GRB_CUR_VY,currentAltitude),dataDate);
+
+    if (recx == NULL || recy == NULL)
+        return NULL;
+    return recy;
+}
+
+GribRecord* GribReaderTop::getCurrentDRecord (time_t dataDate) {
+    bool flag = false;
+
+    Altitude currentAltitude;
+
+    if (gribRead->hasData (DataCode(GRB_PRV_CUR_XY2D, LV_GND_SURF,0))) {
+        currentAltitude = Altitude (LV_GND_SURF,0);
+    } else if (gribRead->hasData (DataCode(GRB_PRV_CUR_XY2D, LV_BLW_SURF,1))) {
+        currentAltitude = Altitude (LV_BLW_SURF,1);
+    } else if (gribRead->hasData (DataCode(GRB_PRV_CUR_XY2D, LV_BLW_SURF,2))) {
+        currentAltitude = Altitude (LV_BLW_SURF,2);
+    } else if (gribRead->hasData (DataCode(GRB_PRV_CUR_XY2D, LV_BLW_SURF,3))) {
+        currentAltitude = Altitude (LV_BLW_SURF,3);
+    }
+    else if (gribRead->hasData (DataCode(GRB_CUR_SPEED, LV_GND_SURF,0))
+     && gribRead->hasData (DataCode(GRB_CUR_DIR, LV_GND_SURF,0)) )
+    {
+        currentAltitude = Altitude (LV_GND_SURF,0);
+    }
+
+    GribRecord *recx = gribRead->getRecord
+                                (DataCode(GRB_CUR_VX,currentAltitude),dataDate);
+    GribRecord *recy = gribRead->getRecord
+                                (DataCode(GRB_CUR_VY,currentAltitude),dataDate);
+
+    if (recx == NULL || recy == NULL) {
+
+        flag = true;
+        recx = gribRead->getRecord
+                           (DataCode(GRB_CUR_SPEED,currentAltitude),dataDate);
+        recy = gribRead->getRecord
+                                (DataCode(GRB_CUR_DIR,currentAltitude),dataDate);
+    }
+
+    if (recx == NULL || recy == NULL)
+        return NULL;
+    return flag ? recy : NULL;
+}
+
+QVector<QVector<v_arrow>>* GribReaderTop::getCurrentGridRecord (time_t dataDate) {
+
+    bool flag = true;
+    GribRecord* recx = getCurrentXRecord(dataDate);
+    GribRecord* recy = getCurrentYRecord(dataDate);
+
+    if (recx == NULL || recy == NULL)
+    {
+        bool flag = false;
+        recx = getCurrentSRecord(dataDate);
+        recy = getCurrentDRecord(dataDate);
+    }
+
+    if (recx == NULL || recy == NULL)
+        return NULL;
+
+    v_arrow zeroPair;
+    zeroPair.first = 0.0;
+    zeroPair.second = 0.0;
+    QVector<QVector<v_arrow>>* currentVdirAtXY = new QVector<QVector<v_arrow>>(recx->getNi(), QVector<v_arrow>(recx->getNj(), zeroPair));
+
+    if (flag)
+    {
+        int Nj = recx->getNj();
+        for (int j = 0; j < Nj; j++)
+        {
+            int Ni = recx->getNi();
+            for (int i = 0; i < Ni; i++)
+            {
+                data_t valueAtX = recx->getValueOnRegularGrid(i,j);
+
+                if(valueAtX != GRIB_NOTDEF)
+                    (*currentVdirAtXY)[i][j].first = valueAtX;
+                else {
+                    double ii = i;
+                    double jj = j;
+                    valueAtX = recx->getInterpolatedValue(ii, jj);
+                    (*currentVdirAtXY)[i][j].first = valueAtX;
+                }
+
+                data_t valueAtY = recy->getValueOnRegularGrid(i,j);
+
+                if(valueAtY != GRIB_NOTDEF)
+                    (*currentVdirAtXY)[i][j].second = valueAtY;
+                else {
+                    double ii = i;
+                    double jj = j;
+                    valueAtY = recy->getInterpolatedValue(ii, jj);
+                    (*currentVdirAtXY)[i][j].second = valueAtY;
+                }
+            }
+        }
+    }
+    else
+    {
+        int Nj = recy->getNj();
+        for (int j = 0; j < Nj; j++)
+        {
+            int Ni = recx->getNi();
+            for (int i = 0; i < Ni; i++)
+            {
+                data_t valueAtY = recy->getValueOnRegularGrid(i,j);
+                data_t valueAtX = recx->getValueOnRegularGrid(i,j);
+
+                if(valueAtY != GRIB_NOTDEF || valueAtX != GRIB_NOTDEF)
+                {
+                    double ang = valueAtY*180.0/M_PI;
+                    (*currentVdirAtXY)[i][j].second = valueAtX*sin(ang);
+                    (*currentVdirAtXY)[i][j].first = valueAtX*cos(ang);
+                }
+                else {
+                    double ii = i;
+                    double jj = j;
+                    valueAtX = recx->getInterpolatedValue(ii, jj);
+                    valueAtY = recy->getInterpolatedValue(ii, jj);
+                    double ang = valueAtY*180.0/M_PI;
+                    (*currentVdirAtXY)[i][j].second = valueAtX*sin(ang);
+                    (*currentVdirAtXY)[i][j].first = valueAtX*cos(ang);
+                }
+            }
+        }
+    }
+
+    return currentVdirAtXY;
+}
+
+
+
+
 // Get wind on date - dataDate
 
 GribRecord* GribReaderTop::getWindXRecord(time_t dataDate) {

@@ -220,9 +220,7 @@ class GribRecord : public RegularGridRecord
         // Reading data
         //---------------------------------------------
         bool readGribSection0_IS (ZUFILE* file);
-        public:
         bool readGribSection1_PDS(ZUFILE* file);
-        private:
         bool readGribSection2_GDS(ZUFILE* file);
         bool readGribSection3_BMS(ZUFILE* file);
         bool readGribSection4_BDS(ZUFILE* file);

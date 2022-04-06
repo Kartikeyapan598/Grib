@@ -26,8 +26,9 @@ Lecture mise en mémoire d'un fichier GRIB
 #include <cstdint>
 #include <memory>
 
+#include "RegularGridded.h"
 #include "GribRecord.h"
-//#include "Grib2Record.h"
+#include "Grib2Record.h"
 #include "LongTaskMessage.h"
 #include "zuFile.h"
 extern "C" {
@@ -117,7 +118,7 @@ class GribReader : public GriddedReader , public LongTaskMessage
         bool storeRecordInMap (GribRecord *rec);
 		void readGribFileContent (int nbrecs);
 		bool readGribRecord(int id);
-		//bool readGrib2Record(int id);
+        bool readGrib2Record(int id);
 		bool readGrib2Record(int id, g2int lgrib);
 
 		std::vector<std::shared_ptr<GribRecord>> * getListOfGribRecords (DataCode dtc);

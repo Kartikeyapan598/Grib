@@ -50,7 +50,8 @@ private:
     Ui::MainWindow *ui;
     void createActions();
     QString strippedName(const QString &fullFileName);
-
+    QString windData();
+    QString currentData();
 private slots:
     void open();
 
