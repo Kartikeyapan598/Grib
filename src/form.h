@@ -2,6 +2,7 @@
 #define FORM_H
 
 #include <QWidget>
+#include <QGridLayout>
 #include <QGraphicsScene>
 
 namespace Ui
@@ -25,9 +26,18 @@ public:
         return QSize(this->width(), this->height());
     }
 
+    void SetScaleFactor(double val) { m_scaleFactor = val; }
+protected Q_SLOTS :
+    void wheelEvent(QWheelEvent *event);
+    void keyPressEvent(QKeyEvent *event);
 private:
     Ui::Form *ui;
     QGraphicsScene* m_scene;
+    QGraphicsView* m_view;
+    //QGridLayout* m_layout;
+    QVBoxLayout* AllBox;
+
+    double m_scaleFactor;
 };
 
 #endif // FORM_H

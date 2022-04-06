@@ -19,6 +19,13 @@ MainWindow::MainWindow(QWidget *parent)
     QPen pen = QPen(Qt::red);
     m_scene->setSceneRect(-400, -200, 300, 300);
 
+    // Draw Grid Pattern
+
+    m_scene->setBackgroundBrush(QBrush(QPixmap(QString("C:/dev/Grib/Grib/src/Resrc/pngegg.png"))));
+    //setViewportUpdateMode(QGraphicsView::SmartViewportUpdate);
+
+    //
+
     createDockView(m_scene);
     addDockWidget(Qt::LeftDockWidgetArea, m_pDockWidget2);
 
@@ -60,17 +67,19 @@ void MainWindow::createDockView(QGraphicsScene* scene)
     m_pDockWidget2->setWidget(m_pForm);
 }
 
+void MainWindow::wheelEvent(QWheelEvent* event)
+{
+}
+
 void MainWindow::on_actionExit_triggered()
 {
     QApplication::quit();
 }
 
-
 void MainWindow::on_actionQt_triggered()
 {
     QApplication::aboutQt();
 }
-
 
 void MainWindow::on_actionDrawSquare_triggered()
 {
@@ -82,6 +91,28 @@ void MainWindow::on_actionDrawSquare_triggered()
     scene->addItem(item);
 }
 
+void MainWindow::on_actionDraw_Circle_triggered()
+{
+    Points* point = new Points();
+    m_wayPoints.push_back(point);
+    point->setPos(randomBetween(-600, 200), randomBetween(-300, 200));
+    QGraphicsScene* scene = m_pForm->GetGraphicsScene();
+    scene->addItem(point);
+
+
+    //m_line.clear();
+    //if(m_wayPoints.size() > 1)
+    //{
+    //    for(int i = 0; i < m_wayPoints.size() - 1; i++)
+    //    {
+    //        QLineF line(m_wayPoints[i]->pos(), m_wayPoints[i + 1]->pos());
+    //        m_line.push_back(line);
+    //        scene->addLine(line);
+    //    }
+    //}
+
+}
+
 void MainWindow::UpdateRenders()
 {
     // Update ViewPort rendering and rendering of Wind, Temp, Weather
@@ -90,18 +121,38 @@ void MainWindow::UpdateRenders()
 void MainWindow::on_actionViewPort_triggered()
 {
     // Hide or Show viewport on Trigger
-    addAction(m_pDockWidget2->toggleViewAction());
+    m_pDockWidget2->addAction(m_pDockWidget2->toggleViewAction());
 }
-
 
 void MainWindow::on_actionRenderTypes_triggered()
 {
     m_rendertypes->show();
 }
 
-
 void MainWindow::on_actionOpen_triggered()
 {
+    QString fileNmae = QFileDialog::getOpenFileName(this, "FileName", path.curr_dir, path.filter);
+    is_loaded = true;
+    is_saved = true;
+}
 
+
+void MainWindow::on_actionClose_triggered()
+{
+    if(is_loaded == true)
+    {
+        // To do Unload the grib/grib2 file
+        is_loaded = false;
+    }
+}
+
+
+void MainWindow::on_actionSave_triggered()
+{
+    if(is_saved == false && is_loaded == true)
+    {
+        // To do Save the file
+        is_saved = true;
+    }
 }
 

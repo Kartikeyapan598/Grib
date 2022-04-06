@@ -1,7 +1,7 @@
 #pragma once
 
 #include <QGraphicsItem>
-
+#include <QGraphicsScene>
 #include <vector>
 
 using namespace std;
@@ -9,10 +9,10 @@ using namespace std;
 class Points : public QObject, public QGraphicsItem
 {
     Q_OBJECT
+    Q_INTERFACES(QGraphicsItem)
 public :
     explicit Points(QObject *parent = 0);
     ~Points();
-
 signals :
 
 private :
@@ -23,12 +23,4 @@ private :
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
 
 public slots:
-};
-
-struct PointSet
-{
-    PointSet(QGraphicsScene* scene);
-private :
-    QGraphicsScene* m_scene;
-    vector<Points> m_wayPoints;
 };

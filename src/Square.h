@@ -11,6 +11,7 @@
 class Square : public QObject, public QGraphicsItem
 {
     Q_OBJECT
+    Q_INTERFACES(QGraphicsItem)
 public :
     explicit Square(QObject *parent = 0);
     ~Square();

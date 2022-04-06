@@ -3,12 +3,10 @@
 Square::Square(QObject *parent) :
     QObject(parent), QGraphicsItem()
 {
-
 }
 
 Square::~Square()
 {
-
 }
 
 QRectF Square::boundingRect() const

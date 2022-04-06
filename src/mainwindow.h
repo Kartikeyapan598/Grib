@@ -1,10 +1,14 @@
 #pragma once
 
+#include <QDir>
+#include <QFileDialog>
 #include <QMainWindow>
 #include <QDockWidget>
+#include <QGraphicsView>
 #include <QGraphicsScene>
 
 #include "form.h"
+#include "points.h"
 #include "Square.h"
 #include "rendertypes.h"
 
@@ -15,6 +19,14 @@ using namespace std;
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
+
+struct Paths
+{
+    QString curr_dir = QDir::currentPath();
+    QString read_path = QDir::currentPath();
+    QString filter = "FileType(*.grib2 *grib);;Picture(*.jpg *.gif);;All(*.*)";
+    QString save_to = QDir::currentPath();
+};
 
 class MainWindow : public QMainWindow
 {
@@ -37,10 +49,17 @@ private slots:
 
     void on_actionOpen_triggered();
 
+    void on_actionClose_triggered();
+
+    void on_actionSave_triggered();
+
+    void on_actionDraw_Circle_triggered();
+
 private:
 
     void addSquare();
     void createDockView(QGraphicsScene* scene);
+    void wheelEvent(QWheelEvent *event);
 
 private:
     QDockWidget *m_pDockWidget2;
@@ -54,4 +73,11 @@ private:
     std::vector<Square*> sq;
 
     static MainWindow* m_instance;
+    Paths path;
+
+    bool is_loaded = false;
+    bool is_saved = false;
+
+    std::vector<Points*> m_wayPoints;
+    std::vector<QLineF> m_line;
 };
