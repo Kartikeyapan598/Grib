@@ -21,7 +21,6 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-
 void MainWindow::on_actionOpen_triggered()
 {
     loadImage();
@@ -29,15 +28,27 @@ void MainWindow::on_actionOpen_triggered()
 
 void MainWindow::drawGrid()
 {
-    qDebug() << m_scene->sceneRect();
-    qDebug() << ui->graphicsView->mapToScene(ui->graphicsView->rect());
-    int skip = 100;
+    int skip = 10;
+
+//    qDebug() << ui->graphicsView->rect();
 
     for (int x = ui->graphicsView->x(), y = ui->graphicsView->y(); y <= ui->graphicsView->height(); y += skip)
         m_scene->addLine(x, y, x + ui->graphicsView->width(), y);
 
     for (int x = ui->graphicsView->x(), y = ui->graphicsView->y(); x <= ui->graphicsView->width(); x += skip)
         m_scene->addLine(x, y, x, y + ui->graphicsView->height());
+}
+
+void MainWindow::openImage(const QString &fname)
+{
+    if (!m_bgImg.load(fname))
+        return;
+
+    m_scene->clearScene();
+
+    QGraphicsPixmapItem* item = new QGraphicsPixmapItem(QPixmap::fromImage(m_bgImg));
+    item->setPos(ui->graphicsView->x(), ui->graphicsView->y());
+    m_scene->addItem(item);
 }
 
 void MainWindow::loadImage()
@@ -48,7 +59,7 @@ void MainWindow::loadImage()
     if (!fname.size())
     {
         QMessageBox msg;
-        msg.setWindowTitle(QString("Error"));
+        msg.setWindowTitle(QString("Error!"));
         msg.setText("Error opening the file: " + fname);
         msg.exec();
 
@@ -58,18 +69,12 @@ void MainWindow::loadImage()
     openImage(fname);
 }
 
-void MainWindow::openImage(const QString &fname)
-{
-    if (!m_bgImg.load(fname))
-        return;
-
-//    QImage img2 = m_bgImg.scaled(ui->graphicsView->width(), ui->graphicsView->height(), Qt::KeepAspectRatio);
-    QGraphicsPixmapItem* item = new QGraphicsPixmapItem(QPixmap::fromImage(m_bgImg));
-    item->setPos(ui->graphicsView->x(), ui->graphicsView->y());
-    m_scene->addItem(item);
-}
-
 void MainWindow::on_actionClear_routes_triggered()
 {
     m_scene->clearScene();
+}
+
+void MainWindow::on_actionClose_triggered()
+{
+    close();
 }

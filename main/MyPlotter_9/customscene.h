@@ -16,10 +16,8 @@
 
 class CustomScene : public QGraphicsScene
 {
+private:
     QPointF m_lastPoint;
-    QVector<QGraphicsEllipseItem*> m_points;
-    QVector<QGraphicsLineItem*> m_linesDrawn;
-    QVector<QGraphicsTextItem*> m_coordinates;
     QVector<QGraphicsItem*> m_sceneItems;
 
 public:

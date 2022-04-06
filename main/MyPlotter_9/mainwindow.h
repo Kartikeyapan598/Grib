@@ -19,15 +19,6 @@ class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
-public:
-    MainWindow(QWidget *parent = nullptr);
-    ~MainWindow();
-
-private slots:
-    void on_actionOpen_triggered();
-
-    void on_actionClear_routes_triggered();
-
 private:
     QImage m_bgImg;
     void drawGrid();
@@ -35,5 +26,14 @@ private:
     void openImage(const QString& fname);
     Ui::MainWindow *ui;
     CustomScene* m_scene;
+
+public:
+    MainWindow(QWidget* parent = nullptr);
+    ~MainWindow();
+
+private slots:
+    void on_actionOpen_triggered();
+    void on_actionClear_routes_triggered();
+    void on_actionClose_triggered();
 };
 #endif // MAINWINDOW_H

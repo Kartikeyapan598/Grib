@@ -3,7 +3,6 @@
 CustomView::CustomView(QWidget* parent)
     : QGraphicsView(parent)
 {
-    m_scaleFactor = 1.0;
 }
 
 void CustomView::wheelEvent(QWheelEvent *e)
@@ -17,8 +16,6 @@ void CustomView::wheelEvent(QWheelEvent *e)
         factor = 1.15;
     else
         factor = 0.8;
-
-    qDebug() << factor << '\n';
 
     scale(factor, factor);
     setTransformationAnchor(oldAnchor); // reset anchor

@@ -11,9 +11,6 @@
 
 class CustomView : public QGraphicsView
 {
-    double m_scaleFactor;
-    const double m_EPSILON = 1e-6;
-
 public:
     CustomView(QWidget* parent = nullptr);
 
