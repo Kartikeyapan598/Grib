@@ -65,6 +65,7 @@ void MainWindow::createDockView(QGraphicsScene* scene)
     m_pForm = new Form(m_pDockWidget2, scene);
     m_pForm->SetGraphicsScene();
     m_pDockWidget2->setWidget(m_pForm);
+    this->setCentralWidget(m_pDockWidget2);
 }
 
 void MainWindow::wheelEvent(QWheelEvent* event)
@@ -98,19 +99,6 @@ void MainWindow::on_actionDraw_Circle_triggered()
     point->setPos(randomBetween(-600, 200), randomBetween(-300, 200));
     QGraphicsScene* scene = m_pForm->GetGraphicsScene();
     scene->addItem(point);
-
-
-    //m_line.clear();
-    //if(m_wayPoints.size() > 1)
-    //{
-    //    for(int i = 0; i < m_wayPoints.size() - 1; i++)
-    //    {
-    //        QLineF line(m_wayPoints[i]->pos(), m_wayPoints[i + 1]->pos());
-    //        m_line.push_back(line);
-    //        scene->addLine(line);
-    //    }
-    //}
-
 }
 
 void MainWindow::UpdateRenders()
@@ -153,6 +141,25 @@ void MainWindow::on_actionSave_triggered()
     {
         // To do Save the file
         is_saved = true;
+    }
+}
+
+
+void MainWindow::on_actionAdd_WayPoints_triggered()
+{
+    if(m_wayPoints.size() <= 1)
+    {
+        CreateMessageBoxInfo(this, "WayPoints", "Not enough Points to make Paths");
+    }
+    if(m_wayPoints.size() > 1)
+    {
+        QGraphicsScene* scene = m_pForm->GetGraphicsScene();
+        for(int i = 0; i < m_wayPoints.size() - 1; i++)
+        {
+            QLineF line(m_wayPoints[i]->pos(), m_wayPoints[i + 1]->pos());
+            m_line.push_back(line);
+            scene->addLine(line);
+        }
     }
 }
 

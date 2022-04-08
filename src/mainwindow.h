@@ -55,6 +55,8 @@ private slots:
 
     void on_actionDraw_Circle_triggered();
 
+    void on_actionAdd_WayPoints_triggered();
+
 private:
 
     void addSquare();

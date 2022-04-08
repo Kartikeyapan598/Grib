@@ -42,6 +42,7 @@
     <addaction name="actionDrawSquare"/>
     <addaction name="actionRenderTypes"/>
     <addaction name="actionDraw_Circle"/>
+    <addaction name="actionAdd_WayPoints"/>
    </widget>
    <widget class="QMenu" name="menuAbout">
     <property name="title">
@@ -122,6 +123,11 @@
   <action name="actionDraw_Circle">
    <property name="text">
     <string>Draw Circle</string>
+   </property>
+  </action>
+  <action name="actionAdd_WayPoints">
+   <property name="text">
+    <string>Add WayPoints</string>
    </property>
   </action>
  </widget>

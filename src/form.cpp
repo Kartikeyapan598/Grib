@@ -13,14 +13,16 @@ Form::Form(QWidget *parent, QGraphicsScene* scene)
 {
     ui->setupUi(this);
     m_view = new QGraphicsView(this);
-    m_view->setDragMode(QGraphicsView::ScrollHandDrag);
-    //setDragMode(QGraphicsView::ScrollHandDrag);
 
-    AllBox = new QVBoxLayout(this);
-    AllBox->addWidget(m_view, 1, Qt::Alignment());
-    //m_view->resizeAnchor()
     m_view->resize(700, 600);
     m_view->setScene(m_scene);
+
+    //m_view->setDragMode(QGraphicsView::ScrollHandDrag);
+    //setDragMode(QGraphicsView::ScrollHandDrag);
+
+    m_layout = this->layout();
+    m_layout->addWidget(m_view);
+    this->setLayout(m_layout);
 }
 
 void Form::wheelEvent(QWheelEvent *event)

@@ -34,8 +34,7 @@ private:
     Ui::Form *ui;
     QGraphicsScene* m_scene;
     QGraphicsView* m_view;
-    //QGridLayout* m_layout;
-    QVBoxLayout* AllBox;
+    QLayout* m_layout;
 
     double m_scaleFactor;
 };
