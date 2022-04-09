@@ -1,48 +1,159 @@
-#include <QtWidgets>
 #include "mainwindow.h"
-#include "./ui_mainwindow.h"
-#include <GribRecord.h>
+#include "ui_mainwindow.h"
+
+#include "Utils.h"
 #include <time.h>
+#include <QApplication>
 
-MainWindow::MainWindow(int w, int h, QWidget *parent)
-                        : QMainWindow(parent)
-                        , ui(new Ui::MainWindow) {
+MainWindow* MainWindow::m_instance;
+
+MainWindow::MainWindow(QWidget *parent)
+    : QMainWindow(parent)
+    , ui(new Ui::MainWindow)
+{
+    m_instance = this;
+
     ui->setupUi(this);
-    createActions();
+    CustomScene* m_scene = new CustomScene();
+    createDockView(m_scene);
+    addDockWidget(Qt::LeftDockWidgetArea, m_pDockWidget2);
 
+    // // //
     gribReaderTop = new GribReaderTop (this);
     assert(gribReaderTop);
+    gribReaderTop->hide();
+    // // //
 
-    gribFileName = "";
-
-    QWidget *mainFrame = new QWidget ();
-    assert (mainFrame);
-    QGridLayout *lay = new QGridLayout (mainFrame);
-    assert (lay);
-
-        lay->setContentsMargins (0,0,0,0);
-        lay->addWidget (gribReaderTop, 0, 0);
-
-    mainFrame->setLayout (lay);
-    this->setCentralWidget (mainFrame);
+    // Select various rendering options like temp, weather, wind etc
+    m_rendertypes = new RenderTypes(this);
+    qApp->installEventFilter(this);
 }
 
-
-void MainWindow::open()
+MainWindow::~MainWindow()
 {
-    QString filter = "";
-    QString &filePath = gribFilePath;
-    QString fileName = QFileDialog::getOpenFileName(this,
-                                                    "Choose a GRIB file",
-                                                    filePath, filter);
+    delete ui;
+}
+
+void MainWindow::createDockView(CustomScene* scene)
+{
+    m_pDockWidget2 = new QDockWidget(this);
+    m_pDockWidget2->setWindowTitle("dock type");
+    m_pDockWidget2->setAllowedAreas(Qt::AllDockWidgetAreas);
+    m_pForm = new Form(m_pDockWidget2, scene);
+    m_pForm->SetGraphicsScene();
+    m_pDockWidget2->setWidget(m_pForm);
+    this->setCentralWidget(m_pDockWidget2);
+}
+
+void MainWindow::wheelEvent(QWheelEvent* event)
+{
+}
+
+void MainWindow::on_actionExit_triggered()
+{
+    QApplication::quit();
+}
+
+void MainWindow::on_actionQt_triggered()
+{
+    QApplication::aboutQt();
+}
+
+void MainWindow::on_actionDrawSquare_triggered()
+{
+    // To Do Add Rendering of Squares in the viewport
+    Square* item = new Square();
+    sq.push_back(item);
+    item->setPos(randomBetween(-600, 200), randomBetween(-300, 200));
+    CustomScene* scene = m_pForm->GetGraphicsScene();
+    scene->addItem(item);
+}
+
+void MainWindow::on_actionDraw_Circle_triggered()
+{
+    Points* point = new Points();
+    m_wayPoints.push_back(point);
+    point->setPos(randomBetween(-600, 200), randomBetween(-300, 200));
+    CustomScene* scene = m_pForm->GetGraphicsScene();
+    scene->addItem(point);
+}
+
+void MainWindow::UpdateRenders()
+{
+    // Update ViewPort rendering and rendering of Wind, Temp, Weather
+}
+
+void MainWindow::on_actionViewPort_triggered()
+{
+    // Hide or Show viewport on Trigger
+    m_pDockWidget2->addAction(m_pDockWidget2->toggleViewAction());
+}
+
+void MainWindow::on_actionRenderTypes_triggered()
+{
+    m_rendertypes->show();
+}
+
+void MainWindow::on_actionOpen_triggered()
+{
+    QString fileName = QFileDialog::getOpenFileName(this, "FileName", path.curr_dir, path.filter);
+    // // //
     if (fileName != "") {
         QFileInfo finfo(fileName);
         gribFilePath = finfo.absolutePath();
         openMeteoDataFile (fileName);
     }
+    // // //
+    is_loaded = true;
+    is_saved = true;
 }
 
 
+void MainWindow::on_actionClose_triggered()
+{
+    if(is_loaded == true)
+    {
+        // To do Unload the grib/grib2 file
+        is_loaded = false;
+    }
+}
+
+
+void MainWindow::on_actionSave_triggered()
+{
+    if(is_saved == false && is_loaded == true)
+    {
+        // To do Save the file
+        is_saved = true;
+    }
+}
+
+
+void MainWindow::on_actionAdd_WayPoints_triggered()
+{
+    if(m_wayPoints.size() <= 1)
+    {
+        CreateMessageBoxInfo(this, "WayPoints", "Not enough Points to make Paths");
+    }
+    if(m_wayPoints.size() > 1)
+    {
+        CustomScene* scene = m_pForm->GetGraphicsScene();
+        for(int i = 0; i < m_wayPoints.size() - 1; i++)
+        {
+            QLineF line(m_wayPoints[i]->pos(), m_wayPoints[i + 1]->pos());
+            m_line.push_back(line);
+            scene->addLine(line);
+        }
+    }
+}
+
+
+void MainWindow::on_actionClear_scene_triggered()
+{
+    m_pForm->clearScene();
+}
+
+// // //
 void MainWindow::openMeteoDataFile (const QString& fileName)
 {
     FileDataType meteoFileType = DATATYPE_NONE;
@@ -66,8 +177,6 @@ void MainWindow::openMeteoDataFile (const QString& fileName)
 
             currentDate = gribReaderTop->getCurrentDate();
 
-            gribFileName = fileName;
-
             // Malformed grib file ?
             GriddedReader *reader = gribReaderTop->getReader();
             if (reader->hasAmbiguousHeader()) {
@@ -85,7 +194,7 @@ void MainWindow::openMeteoDataFile (const QString& fileName)
                 );
             }
         }
-       slotFile_Info_GRIB ();
+       showGribInfo ();
     }
 
     else {
@@ -102,7 +211,7 @@ void MainWindow::openMeteoDataFile (const QString& fileName)
     }
 }
 
-void MainWindow::slotFile_Info_GRIB () {
+void MainWindow::showGribInfo () {
 
     if (!gribReaderTop->isReaderOk())    {
         QMessageBox::information (this,
@@ -199,32 +308,10 @@ void MainWindow::slotFile_Info_GRIB () {
     textBox = new box(this);
     int Ni = record->getNi();
     int Nj = record->getNj();
-    QString dateWiseGrid = "";
 
-    std::set<time_t>::iterator date_i;
+    GribRecord *rec = gribReaderTop->getReader()->getFirstGribRecord();
 
-    for (date_i = sdates.begin(); date_i != sdates.end(); date_i++)
-    {
-        dateWiseGrid += Util::formatDateTimeLong(*date_i) + " : \n\n";
-        QVector<QVector<v_arrow>>* wind = gribReaderTop->getWindGridRecord(*date_i);
-
-        if (wind == NULL)
-            continue;
-
-        Ni = (*wind).size();
-        Nj = (*wind)[0].size();
-        for (int j = 0; j < Nj; j++)
-        {
-            for (int i = 0; i < Ni; i++)
-            {
-                valueIJ = "(" + QString::number((*wind)[i][j].first)
-                            + ", " + QString::number((*wind)[i][j].second) + ")";
-                dateWiseGrid += valueIJ + " ";
-            }
-            dateWiseGrid += "\n";
-        }
-        dateWiseGrid += "\n\n";
-    }
+    QString dateWiseGrid = windData(); // or currentData();
 
     msg += dateWiseGrid;
     textBox->gribInfo->append(msg);
@@ -236,7 +323,7 @@ void MainWindow::slotFile_Info_GRIB () {
 QString MainWindow::windData() {
 
     QString dateWiseGrid = "";
-
+    QString valueIJ = "";
     std::set<time_t> sdates = gribReaderTop->getReader()->getListDates();
     std::set<time_t>::iterator date_i;
 
@@ -268,7 +355,7 @@ QString MainWindow::windData() {
 QString MainWindow::currentData() {
 
     QString dateWiseGrid = "";
-
+    QString valueIJ = "";
     std::set<time_t> sdates = gribReaderTop->getReader()->getListDates();
     std::set<time_t>::iterator date_i;
 
@@ -296,23 +383,4 @@ QString MainWindow::currentData() {
     }
     return dateWiseGrid;
 }
-
-void MainWindow::createActions () {
-    QMenu *fileMenu = menuBar()->addMenu("File");
-    QAction *openAct = new QAction("Open...", this);
-
-    connect(openAct, SIGNAL(triggered()), this, SLOT(open()));
-
-    fileMenu->addAction(openAct);
-}
-
-MainWindow::~MainWindow() {
-    delete ui;
-}
-
-void MainWindow::closeEvent (QCloseEvent *event) {
-    event->accept();
-}
-
-
-
+// // //

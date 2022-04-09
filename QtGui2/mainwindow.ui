@@ -14,8 +14,128 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget"/>
-  <widget class="QMenuBar" name="menubar"/>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>800</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <addaction name="actionOpen"/>
+    <addaction name="actionClose"/>
+    <addaction name="actionNew"/>
+    <addaction name="actionSave"/>
+    <addaction name="actionSave_As"/>
+    <addaction name="actionClear_scene"/>
+    <addaction name="actionExit"/>
+   </widget>
+   <widget class="QMenu" name="menuRenderOp">
+    <property name="title">
+     <string>RenderOp</string>
+    </property>
+    <addaction name="actionViewPort"/>
+    <addaction name="actionDrawSquare"/>
+    <addaction name="actionRenderTypes"/>
+    <addaction name="actionDraw_Circle"/>
+    <addaction name="actionAdd_WayPoints"/>
+   </widget>
+   <widget class="QMenu" name="menuAbout">
+    <property name="title">
+     <string>About</string>
+    </property>
+    <addaction name="actionXtreme_Technologies"/>
+    <addaction name="actionXYGrib"/>
+    <addaction name="actionQt"/>
+   </widget>
+   <addaction name="menuFile"/>
+   <addaction name="menuRenderOp"/>
+   <addaction name="menuAbout"/>
+  </widget>
   <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionOpen">
+   <property name="text">
+    <string>Open </string>
+   </property>
+  </action>
+  <action name="actionClose">
+   <property name="text">
+    <string>Close</string>
+   </property>
+  </action>
+  <action name="actionNew">
+   <property name="text">
+    <string>New</string>
+   </property>
+  </action>
+  <action name="actionSave">
+   <property name="text">
+    <string>Save</string>
+   </property>
+  </action>
+  <action name="actionSave_As">
+   <property name="text">
+    <string>Save As</string>
+   </property>
+  </action>
+  <action name="actionViewPort">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>ViewPort</string>
+   </property>
+  </action>
+  <action name="actionDrawSquare">
+   <property name="text">
+    <string>DrawSquare</string>
+   </property>
+  </action>
+  <action name="actionExit">
+   <property name="text">
+    <string>Exit</string>
+   </property>
+  </action>
+  <action name="actionXtreme_Technologies">
+   <property name="text">
+    <string>Xtreme Technologies</string>
+   </property>
+  </action>
+  <action name="actionXYGrib">
+   <property name="text">
+    <string>XYGrib</string>
+   </property>
+  </action>
+  <action name="actionQt">
+   <property name="text">
+    <string>Qt</string>
+   </property>
+  </action>
+  <action name="actionRenderTypes">
+   <property name="text">
+    <string>RenderTypes</string>
+   </property>
+  </action>
+  <action name="actionDraw_Circle">
+   <property name="text">
+    <string>Draw Circle</string>
+   </property>
+  </action>
+  <action name="actionAdd_WayPoints">
+   <property name="text">
+    <string>Add WayPoints</string>
+   </property>
+  </action>
+  <action name="actionClear_scene">
+   <property name="text">
+    <string>Clear scene</string>
+   </property>
+  </action>
  </widget>
  <resources/>
  <connections/>

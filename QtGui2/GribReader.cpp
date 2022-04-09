@@ -406,8 +406,8 @@ int GribReader::seekgb_zu (
 bool GribReader::readGribRecord(int id)
 {
     //--------------------------------------------------------
-    // Lecture de l'ensemble des GribRecord du fichier
-    // et stockage dans les listes appropriées.
+    // Reading all the GribRecords of the file
+    // and store in appropriate lists.
     //--------------------------------------------------------
     GribRecord *rec;
 	bool eof;

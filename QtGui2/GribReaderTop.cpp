@@ -643,12 +643,12 @@ QVector<QVector<v_arrow>>* GribReaderTop::getWindGridRecord (time_t dataDate) {
                 data_t valueAtX = recx->getValueOnRegularGrid(i,j);
 
                 if(valueAtX != GRIB_NOTDEF)
-                    (*windVdirAtXY)[i][j].first = valueAtX;
+                    (*windVdirAtXY)[i][j].first = -valueAtX;
                 else {
                     double ii = i;
                     double jj = j;
                     valueAtX = recx->getInterpolatedValue(ii, jj);
-                    (*windVdirAtXY)[i][j].first = valueAtX;
+                    (*windVdirAtXY)[i][j].first = -valueAtX;
                 }
 
                 data_t valueAtY = recy->getValueOnRegularGrid(i,j);

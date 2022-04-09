@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.5)
 
 if (WIN32)
-project(QtGui2 VERSION 0.1 LANGUAGES CXX)
+project(QtGui2 VERSION 0.2 LANGUAGES CXX)
 elseif (UNIX)
-     project(QtGui2 VERSION 0.1)
+     project(QtGui2 VERSION 0.2)
 endif()
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
@@ -18,7 +18,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets REQUIRED)
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets Network REQUIRED)
 
-#add_subdirectory(g2clib-1.6.0)
 set(PROJECT_SOURCES
         main.cpp
         mainwindow.cpp
@@ -62,18 +61,10 @@ set(PROJECT_SOURCES
         grib2.h
         gridtemplates.h
         pdstemplates.h
-        #cmplxpack.c
-        #compack.c
         comunpack.c
         dec_jpeg2000.c
         dec_png.c
         drstemplates.c
-        #enc_jpeg2000.c
-        #enc_png.c
-        #g2_addfield.c
-        #g2_addgrid.c
-        #g2_addlocal.c
-        #g2_create.c
         g2_free.c
         g2_getfld.c
         g2_gribend.c
@@ -91,24 +82,31 @@ set(PROJECT_SOURCES
         getpoly.c
         gridtemplates.c
         int_power.c
-        #jpcpack.c
         jpcunpack.c
         jpeg2000_openjpeg.c
-        #main.c
-        #mainhome.c
-        #misspack.c
-        #mkieee.c
-        #pack_gp.c
         pdstemplates.c
-        #pngpack.c
         pngunpack.c
         rdieee.c
-        #reduce.c
         seekgb.c
-        #simpack.c
         simunpack.c
-        #specpack.c
         specunpack.c
+        form.cpp
+        form.h
+        form.ui
+        gribdata.cpp
+        gribdata.h
+        points.cpp
+        points.h
+        rendertypes.cpp
+        rendertypes.h
+        rendertypes.ui
+        Square.cpp
+        Square.h
+        Utils.h
+        customscene.cpp
+        customscene.h
+        customview.cpp
+        customview.h
 )
 
 add_library(g2clib STATIC )
@@ -118,6 +116,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
     )
+
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET QtGui2 APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
 #                 ${CMAKE_CURRENT_SOURCE_DIR}/android)
@@ -135,6 +134,7 @@ else()
         )
     endif()
 endif()
+
 
 find_library(LIBNOVA_LIBRARY
      NAMES "libnova.a" "libnova.so"
@@ -167,9 +167,7 @@ find_path(LIBNOVA_INCLUDE_DIR
  )
 include_directories(${LIBNOVA_INCLUDE_DIR})
 
-#find_package(OpenJPEG REQUIRED)
 find_library(OPENJPEG_LIBRARIES
-#     NAMES "libopenjp2.a" "libopenjp2.so" "libopenjpeg.so.2" "libopenjp2.dll.a"
      NAMES "libopenjp2.so.7" "libopenjp2.so" "libopenjp2.a" "libopenjpeg.so.2" "libopenjp2.dll.a"
      PATHS
      $ENV{EXTERNLIBS}/lib
@@ -202,10 +200,6 @@ find_path(OPENJPEG_INCLUDE_DIR
  )
 include_directories(${OPENJPEG_INCLUDE_DIR})
 
-find_package(PROJ CONFIG REQUIRED)
-
-target_link_libraries(QtGui2 PRIVATE PROJ::proj)
-
 
 if(WIN32)
     message(STATUS "Search WIN32 BZIP2")
@@ -235,7 +229,6 @@ include_directories(${BZIP2_INCLUDE_DIR})
         $ENV{EXTERNLIBS}/lib
         /opt/lib
         /usr/local
-        /home/pr6khar/Downloads/zlib-1.2.11
         REQUIRED
     )
     find_path(ZLIB_INCLUDE_DIR
@@ -244,7 +237,6 @@ include_directories(${BZIP2_INCLUDE_DIR})
          $ENV{EXTERNLIBS}/include
          /opt/include
          /usr/local
-         /home/pr6khar/Downloads/zlib-1.2.11
          REQUIRED
      )
 
