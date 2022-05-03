@@ -1,6 +1,0 @@
-#pragma once
-
-struct GribData
-{
-
-};

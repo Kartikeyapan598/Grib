@@ -33,6 +33,8 @@
     <addaction name="actionSave"/>
     <addaction name="actionSave_As"/>
     <addaction name="actionExit"/>
+    <addaction name="separator"/>
+    <addaction name="actionDownLoad_File"/>
    </widget>
    <widget class="QMenu" name="menuRenderOp">
     <property name="title">
@@ -43,6 +45,8 @@
     <addaction name="actionRenderTypes"/>
     <addaction name="actionDraw_Circle"/>
     <addaction name="actionAdd_WayPoints"/>
+    <addaction name="separator"/>
+    <addaction name="actionOpen_Csv"/>
    </widget>
    <widget class="QMenu" name="menuAbout">
     <property name="title">
@@ -128,6 +132,16 @@
   <action name="actionAdd_WayPoints">
    <property name="text">
     <string>Add WayPoints</string>
+   </property>
+  </action>
+  <action name="actionOpen_Csv">
+   <property name="text">
+    <string>Open Csv</string>
+   </property>
+  </action>
+  <action name="actionDownLoad_File">
+   <property name="text">
+    <string>DownLoad File</string>
    </property>
   </action>
  </widget>

@@ -11,19 +11,25 @@ CONFIG += c++17
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    src/DownloadManager.cpp \
+    src/csvloader.cpp \
+    src/tableview.cpp \
+    src/textprogressbar.cpp \
     src\Square.cpp \
     src\form.cpp \
-    src\gribdata.cpp \
     src\main.cpp \
     src\mainwindow.cpp \
     src\points.cpp \
     src\rendertypes.cpp
 
 HEADERS += \
+    src/DownloadManager.h \
+    src/csvloader.h \
+    src/tableview.h \
+    src/textprogressbar.h \
     src\Square.h \
     src\Utils.h \
     src\form.h \
-    src\gribdata.h \
     src\mainwindow.h \
     src\points.h \
     src\rendertypes.h
@@ -33,7 +39,4 @@ FORMS += \
     src\mainwindow.ui \
     src\rendertypes.ui
 
-# Default rules for deployment.
-qnx: target.path = /tmp/$${TARGET}/bin
-else: unix:!android: target.path = /opt/$${TARGET}/bin
-!isEmpty(target.path): INSTALLS += target
+
