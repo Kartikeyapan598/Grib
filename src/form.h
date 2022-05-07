@@ -5,6 +5,9 @@
 #include <QGridLayout>
 #include <QGraphicsScene>
 
+#include "customscene.h"
+#include "customview.h"
+
 namespace Ui
 {
     class Form;
@@ -13,29 +16,33 @@ namespace Ui
 class Form : public QWidget
 {
     Q_OBJECT
-public:
-    Form() = delete;
-    explicit Form(QWidget* parent = nullptr, QGraphicsScene* scene = nullptr);
-    ~Form();
-    void SetGraphicsScene();
-    QGraphicsScene* GetGraphicsScene() { return m_scene; }
-public:
-    QSize sizeHint() const
-    {
-        qDebug("%d: %d", this->width(), this->height());
-        return QSize(this->width(), this->height());
-    }
 
-    void SetScaleFactor(double val) { m_scaleFactor = val; }
+public:
+
+    Form() = delete;
+    explicit Form(QWidget* parent = nullptr, CustomScene* scene = nullptr);
+    ~Form();
+
+    void SetGraphicsScene();
+    void clearScene();
+
+    QSize sizeHint() const { return QSize(this->width(), this->height()); }
+
+    CustomScene* GetGraphicsScene() { return m_scene; }
+    CustomView* GetGraphicsView() { return m_view; }
+
 protected Q_SLOTS :
+
     void wheelEvent(QWheelEvent *event);
     void keyPressEvent(QKeyEvent *event);
+
 private:
+
     Ui::Form *ui;
-    QGraphicsScene* m_scene;
-    QGraphicsView* m_view;
-    //QGridLayout* m_layout;
-    QVBoxLayout* AllBox;
+
+    CustomScene*    m_scene;
+    CustomView*     m_view;
+    QLayout*        m_layout;
 
     double m_scaleFactor;
 };

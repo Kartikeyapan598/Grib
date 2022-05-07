@@ -11,6 +11,9 @@
 #include "points.h"
 #include "Square.h"
 #include "rendertypes.h"
+#include "customscene.h"
+#include "customview.h"
+#include "DownloadManager.h"
 
 #include <vector>
 
@@ -24,7 +27,7 @@ struct Paths
 {
     QString curr_dir = QDir::currentPath();
     QString read_path = QDir::currentPath();
-    QString filter = "FileType(*.grib2 *grib);;Picture(*.jpg *.gif);;All(*.*)";
+    QString filter = "FileType(*.grib2 *.grib *.grb *.grb2);;Picture(*.jpg *.gif);;All(*.*)";
     QString save_to = QDir::currentPath();
 };
 
@@ -46,26 +49,23 @@ private slots:
     void on_actionDrawSquare_triggered();
     void on_actionViewPort_triggered();
     void on_actionRenderTypes_triggered();
-
     void on_actionOpen_triggered();
-
     void on_actionClose_triggered();
-
     void on_actionSave_triggered();
-
     void on_actionDraw_Circle_triggered();
+    void on_actionDownLoad_File_triggered();
 
 private:
 
     void addSquare();
-    void createDockView(QGraphicsScene* scene);
+    void createDockView(CustomScene* scene);
     void wheelEvent(QWheelEvent *event);
 
 private:
     QDockWidget *m_pDockWidget2;
+    Form        *m_pForm;
+    QAction     *m_pExit;
 
-    Form *m_pForm;
-    QAction *m_pExit;
     Ui::MainWindow *ui;
 
     RenderTypes* m_rendertypes;
@@ -78,6 +78,6 @@ private:
     bool is_loaded = false;
     bool is_saved = false;
 
-    std::vector<Points*> m_wayPoints;
-    std::vector<QLineF> m_line;
+    std::vector<Points*>    m_wayPoints;
+    std::vector<QLineF>     m_line;
 };

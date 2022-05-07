@@ -14,17 +14,7 @@ MainWindow::MainWindow(QWidget *parent)
     m_instance = this;
 
     ui->setupUi(this);
-    QGraphicsScene* m_scene = new QGraphicsScene();
-
-    QPen pen = QPen(Qt::red);
-    m_scene->setSceneRect(-400, -200, 300, 300);
-
-    // Draw Grid Pattern
-
-    m_scene->setBackgroundBrush(QBrush(QPixmap(QString("C:/dev/Grib/Grib/src/Resrc/pngegg.png"))));
-    //setViewportUpdateMode(QGraphicsView::SmartViewportUpdate);
-
-    //
+    CustomScene* m_scene = new CustomScene();
 
     createDockView(m_scene);
     addDockWidget(Qt::LeftDockWidgetArea, m_pDockWidget2);
@@ -32,23 +22,6 @@ MainWindow::MainWindow(QWidget *parent)
     // Select various rendering options like temp, weather, wind etc
     m_rendertypes = new RenderTypes(this);
 
-    QLineF Topline(m_scene->sceneRect().topLeft(), m_scene->sceneRect().topRight());
-    QLineF Leftline(m_scene->sceneRect().topLeft(), m_scene->sceneRect().bottomLeft());
-    QLineF Rightline(m_scene->sceneRect().topRight(), m_scene->sceneRect().bottomRight());
-    QLineF Bottomline(m_scene->sceneRect().bottomLeft(), m_scene->sceneRect().bottomRight());
-
-    m_scene->addLine(Topline, pen);
-    m_scene->addLine(Leftline, pen);
-    m_scene->addLine(Rightline, pen);
-    m_scene->addLine(Bottomline, pen);
-
-    QBrush red = QBrush(Qt::red);
-    QBrush blue = QBrush(Qt::blue);
-    QPen blackpen = QPen(Qt::black);
-    blackpen.setWidth(2);
-    m_scene->addEllipse(50, 50, 100, 100, blackpen, red);
-    QGraphicsRectItem* rect = m_scene->addRect(-100, -100, 50, 50, blackpen, blue);
-    rect->setFlag(QGraphicsItem::ItemIsMovable);
     qApp->installEventFilter(this);
 }
 
@@ -57,7 +30,7 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::createDockView(QGraphicsScene* scene)
+void MainWindow::createDockView(CustomScene* scene)
 {
     m_pDockWidget2 = new QDockWidget(this);
     m_pDockWidget2->setWindowTitle("dock type");
@@ -65,6 +38,7 @@ void MainWindow::createDockView(QGraphicsScene* scene)
     m_pForm = new Form(m_pDockWidget2, scene);
     m_pForm->SetGraphicsScene();
     m_pDockWidget2->setWidget(m_pForm);
+    this->setCentralWidget(m_pDockWidget2);
 }
 
 void MainWindow::wheelEvent(QWheelEvent* event)
@@ -98,18 +72,6 @@ void MainWindow::on_actionDraw_Circle_triggered()
     point->setPos(randomBetween(-600, 200), randomBetween(-300, 200));
     QGraphicsScene* scene = m_pForm->GetGraphicsScene();
     scene->addItem(point);
-
-
-    //m_line.clear();
-    //if(m_wayPoints.size() > 1)
-    //{
-    //    for(int i = 0; i < m_wayPoints.size() - 1; i++)
-    //    {
-    //        QLineF line(m_wayPoints[i]->pos(), m_wayPoints[i + 1]->pos());
-    //        m_line.push_back(line);
-    //        scene->addLine(line);
-    //    }
-    //}
 
 }
 
@@ -155,4 +117,16 @@ void MainWindow::on_actionSave_triggered()
         is_saved = true;
     }
 }
+
+void MainWindow::on_actionDownLoad_File_triggered()
+{
+    //Crashing Why?
+    //m_dataManager->append(QStringList("https://www.win-rar.com/fileadmin/winrar-versions/winrar/winrar-x64-611.exe"));
+    DownloadManager* manager = new DownloadManager(NULL);
+    QStringList list;
+    list.append(QString("https://speed.hetzner.de/100MB.bin"));
+    manager->append(list);
+    return;
+}
+
 
