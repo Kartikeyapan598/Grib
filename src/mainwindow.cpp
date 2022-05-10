@@ -19,6 +19,8 @@ MainWindow::MainWindow(QWidget *parent)
     createDockView(m_scene);
     addDockWidget(Qt::LeftDockWidgetArea, m_pDockWidget2);
 
+    gridData = NULL;
+
     // Select various rendering options like temp, weather, wind etc
     m_rendertypes = new RenderTypes(this);
 
@@ -93,7 +95,16 @@ void MainWindow::on_actionRenderTypes_triggered()
 
 void MainWindow::on_actionOpen_triggered()
 {
-    QString fileNmae = QFileDialog::getOpenFileName(this, "FileName", path.curr_dir, path.filter);
+    fileName = QFileDialog::getOpenFileName(this, "FileName", path.curr_dir, path.filter);
+
+/* Save old gridData to local directory
+--
+--
+--
+*/
+    delete gridData;
+    gridData = new GridData(fileName.toStdString().c_str());
+
     is_loaded = true;
     is_saved = true;
 }

@@ -14,7 +14,7 @@
 #include "customscene.h"
 #include "customview.h"
 #include "DownloadManager.h"
-
+#include "griddata.h"
 #include <vector>
 
 using namespace std;
@@ -27,7 +27,7 @@ struct Paths
 {
     QString curr_dir = QDir::currentPath();
     QString read_path = QDir::currentPath();
-    QString filter = "FileType(*.grib2 *.grib *.grb *.grb2);;Picture(*.jpg *.gif);;All(*.*)";
+    QString filter = "FileType(*.grib2 *.grib *.grb *.grb2);;CSV(*.csv);;All(*.*)";
     QString save_to = QDir::currentPath();
 };
 
@@ -37,29 +37,29 @@ class MainWindow : public QMainWindow
 
 public:
 
-    MainWindow(QWidget *parent = nullptr);
-    ~MainWindow();
-    static MainWindow& GetMainWindowInstance() { return *m_instance; }
-    void UpdateRenders();
+    MainWindow (QWidget *parent = nullptr);
+    ~MainWindow ();
+    static MainWindow& GetMainWindowInstance () { return *m_instance; }
+    void UpdateRenders ();
 
 private slots:
 
-    void on_actionExit_triggered();
-    void on_actionQt_triggered();
-    void on_actionDrawSquare_triggered();
-    void on_actionViewPort_triggered();
-    void on_actionRenderTypes_triggered();
-    void on_actionOpen_triggered();
-    void on_actionClose_triggered();
-    void on_actionSave_triggered();
-    void on_actionDraw_Circle_triggered();
-    void on_actionDownLoad_File_triggered();
+    void on_actionExit_triggered ();
+    void on_actionQt_triggered ();
+    void on_actionDrawSquare_triggered ();
+    void on_actionViewPort_triggered ();
+    void on_actionRenderTypes_triggered ();
+    void on_actionOpen_triggered ();
+    void on_actionClose_triggered ();
+    void on_actionSave_triggered ();
+    void on_actionDraw_Circle_triggered ();
+    void on_actionDownLoad_File_triggered ();
 
 private:
 
     void addSquare();
-    void createDockView(CustomScene* scene);
-    void wheelEvent(QWheelEvent *event);
+    void createDockView (CustomScene* scene);
+    void wheelEvent (QWheelEvent *event);
 
 private:
     QDockWidget *m_pDockWidget2;
@@ -80,4 +80,6 @@ private:
 
     std::vector<Points*>    m_wayPoints;
     std::vector<QLineF>     m_line;
+    QString fileName;
+    GridData* gridData;
 };

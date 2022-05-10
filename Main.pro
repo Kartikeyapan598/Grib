@@ -10,10 +10,12 @@ CONFIG += c++17
 
 SOURCES += \
     src/Square.cpp \
+    src/data.cpp \
     src/form.cpp \
-    src/gribdata.cpp \
+    src/griddata.cpp \
     src/main.cpp \
     src/mainwindow.cpp \
+    src/plotter.cpp \
     src/points.cpp \
     src/rendertypes.cpp \
     src/customview.cpp \
@@ -24,9 +26,11 @@ SOURCES += \
 HEADERS += \
     src/Square.h \
     src/Utils.h \
+    src/data.h \
     src/form.h \
-    src/gribdata.h \
+    src/griddata.h \
     src/mainwindow.h \
+    src/plotter.h \
     src/points.h \
     src/rendertypes.h \
     src/customview.h \

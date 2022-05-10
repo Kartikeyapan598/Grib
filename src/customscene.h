@@ -30,10 +30,11 @@ public:
 
     void    mousePressEvent (QGraphicsSceneMouseEvent* e) override;
     void    clearScene ();
-    int     xExtent () const    {  return mapWidth / 2; }
-    int     yExtent () const    {  return mapHeight / 2; }
-    float   stepI () const      {  return mapWidth / 360.0; }
-    float   stepJ () const      {  return mapHeight / (2*toMerc (80.0)); }
+    void    clearInitialGrid();
+    int     xExtent ()  const  {  return mapWidth / 2; }
+    int     yExtent ()  const  {  return mapHeight / 2; }
+    float   stepI ()    const  {  return mapWidth / 360.0; }
+    float   stepJ ()    const  {  return mapHeight / (2*toMerc (80.0)); }
     QPointF zeroLonLat () const { return zero; }
     std::map<int, QColor> GetColourScale() const { return m_col; }
 };

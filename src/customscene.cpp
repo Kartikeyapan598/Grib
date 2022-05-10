@@ -20,8 +20,10 @@ CustomScene::CustomScene(QWidget* parent)
 
     // Draw Grid Pattern
 
-    QPen meridianPen = QPen(Qt::red, 0.3);
-    QPen gridPen = QPen(Qt::black, 0.3);
+    QPen meridianPen = QPen(Qt::red, 0.5);
+    QPen gridPen = QPen(Qt::black, 0.5);
+    meridianPen.setCosmetic(true);
+    gridPen.setCosmetic(true);
     float stepi = stepI();
     float stepj = stepJ();
     float mapXmax = xExtent();
@@ -29,7 +31,8 @@ CustomScene::CustomScene(QWidget* parent)
 
     // Vertical Lines (longitudes)
 
-    addLine(0, -mapYmax, 0, mapYmax, meridianPen); // prime meridian
+    QGraphicsLineItem *lon = addLine(0, -mapYmax, 0, mapYmax, meridianPen); // prime meridian
+    lonLatLines.push_back(lon);
 
     for (int x = 1; x <= 180; x++) {
         QGraphicsLineItem *lon = addLine(x*stepi, -mapYmax, x*stepi, mapYmax, gridPen);
@@ -42,7 +45,8 @@ CustomScene::CustomScene(QWidget* parent)
 
     // Horizontal lines (latitudes)
 
-    addLine(-mapXmax, 0, mapXmax, 0, meridianPen);
+    QGraphicsLineItem *lat = addLine(-mapXmax, 0, mapXmax, 0, meridianPen);
+    lonLatLines.push_back(lat);
 
     for (int y = 1; y <= 80; y++) {
         float y_merc = toMerc(y);
@@ -75,6 +79,7 @@ void CustomScene::mousePressEvent(QGraphicsSceneMouseEvent *e)
         double rad = 1;
         QGraphicsEllipseItem* el = addEllipse(p.x() - rad, p.y() - rad, rad*2.0, rad*2.0,
                                                     QPen(Qt::red), QBrush(Qt::SolidPattern));
+        el->setFlag(QGraphicsItem::ItemIsMovable);
         el->setZValue(std::numeric_limits<qreal>::max()); // on top of every item
 
         m_sceneItems.push_back(el);
@@ -172,4 +177,11 @@ void CustomScene::initColourScale() {
         }
     }
     m_col[78] = colScale[78];
+}
+
+void CustomScene::clearInitialGrid()
+{
+    for (int i = 0; i < lonLatLines.size(); ++i) {
+        removeItem(lonLatLines[i]);
+    }
 }

@@ -2,7 +2,6 @@
 #include "Utils.h"
 
 #include <QTextStream>
-
 #include <cstdio>
 
 using namespace std;
