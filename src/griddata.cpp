@@ -9,9 +9,9 @@
 
 GridData* GridData::m_gridDataInstance;
 
-GridData::GridData (const char* fname)
+GridData::GridData(const char* fname)
 {
-    if(!m_gridDataInstance) {
+    if (!m_gridDataInstance) {
         m_gridDataInstance = this;
     }
     else {
@@ -19,7 +19,7 @@ GridData::GridData (const char* fname)
     }
     decode(fname);
 }
-GridData::~GridData ()
+GridData::~GridData()
 {
 }
 
@@ -78,7 +78,7 @@ void GridData::decodePressure(int fc, int* fd)
         }
         --fieldsToRead;
 
-//        double value = t * (15000 / 255.0);
+        //        double value = t * (15000 / 255.0);
         double value = t;
         pressure[fc].push_back(value);
     }
@@ -161,7 +161,8 @@ void GridData::decodeWindWavePeriod(int fc, int* fd)
 
         double value = val * (20 / 15.0);
         windWavePer[fc].push_back(value);
-        t >>= 4; val = 0;
+        t >>= 4;
+        val = 0;
 
         if (fieldsToRead)
         {
@@ -172,7 +173,8 @@ void GridData::decodeWindWavePeriod(int fc, int* fd)
 
             value = val * (20 / 15.0);
             windWavePer[fc].push_back(value);
-            t >>= 4; val = 0;
+            t >>= 4;
+            val = 0;
         }
         else
         {
@@ -223,7 +225,7 @@ void GridData::decodeSwellWavePeriod(int fc, int* fd)
 {
     uint8_t t = 0;
     uint8_t val = 0;
-    int fieldsToRead = Ni * Nj;
+    int fieldsToRead = ni * nj;
 
     while (fieldsToRead > 0)
     {
@@ -233,21 +235,71 @@ void GridData::decodeSwellWavePeriod(int fc, int* fd)
             return;
         }
         --fieldsToRead;
-        --fieldsToRead;
 
         for (uint8_t i = 0; i < 4; ++i)
             val |= (t & (1 << i));
 
         double value = val * (20 / 15.0);
         swellWavePer[fc].push_back(value);
-        t >>= 4;
+        t = (t >> 4);
         val = 0;
 
-        for (uint8_t i = 0; i < 4; ++i)
-            val |= (t & (1 << i));
+        if (fieldsToRead)
+        {
+            --fieldsToRead;
 
-        value = val * (20 / 15.0);
-        swellWavePer[fc].push_back(value);
+            for (uint8_t i = 0; i < 4; ++i)
+                val |= (t & (1 << i));
+
+            value = val * (20 / 15.0);
+            swellWavePer[fc].push_back(value);
+            t >>= 4;
+            val = 0;
+        }
+        else
+        {
+            break;
+        }
+    }
+}
+
+void GridData::decodeCurrentSpeed(int fc, int* fd)
+{
+    uint8_t t = 0;
+    int fieldsToRead = ni * nj;
+
+    while (fieldsToRead)
+    {
+        if (read(*fd, &t, 1) != 1)
+        {
+            // QMsgbox read error
+            // e.g. error reading wind speed data for forecast 'fc'
+            std::cerr << "Error reading wind speed for forecast: " << fc << '\n';
+            return;
+        }
+        --fieldsToRead;
+
+        double value = t * (100 / 255.0);
+        currentSpeed[fc].push_back(value);
+    }
+}
+
+void GridData::decodeCurrentDir(int fc, int* fd)
+{
+    uint8_t t = 0;
+    int fieldsToRead = ni * nj;
+
+    while (fieldsToRead)
+    {
+        if (read(*fd, &t, 1) != 1)
+        {
+            // QMsgbox read error
+            return;
+        }
+        --fieldsToRead;
+
+        int value = t * (360 / 255.0);
+        currentDir[fc].push_back(value);
     }
 }
 
@@ -264,9 +316,13 @@ int GridData::decode(int* fd)
         decodeWindWaveHeight(i, fd);
         decodeWindWaveDir(i, fd);
         decodeWindWavePeriod(i, fd);
+
         decodeSwellWaveHeight(i, fd);
         decodeSwellWaveDir(i, fd);
         decodeSwellWavePeriod(i, fd);
+
+        decodeCurrentSpeed(i, fd);
+        decodeCurrentDir(i, fd);
     }
 
     return 0;
@@ -281,7 +337,8 @@ int GridData::decode(const char* fname)
         return -1;
     }
 
-    uint32_t buf[4] = { 0, 0, 0, 0 };
+    uint32_t t = 0;
+    float buf[4] = { 0, 0, 0, 0 };
 
     if (read(fd, buf, 16) != 16)
     {
@@ -294,37 +351,41 @@ int GridData::decode(const char* fname)
     xMax = buf[2];
     yMax = buf[3];
 
-    if (read(fd, &buf[0], 1) != 1)
+    if (read(fd, &t, 1) != 1)
     {
         // QMessagebox error
         return -1;
     }
 
-    Ni = buf[0];
+    Ni = t;
+    t = 0;
 
-    if (read(fd, &buf[0], 1) != 1)
+    if (read(fd, &t, 1) != 1)
     {
         // QMessagebox error
         return -1;
     }
 
-    Nj = buf[0];
+    Nj = t;
+    t = 0;
 
-    if (read(fd, &buf[0], 1) != 1)
+    if (read(fd, &t, 1) != 1)
     {
         // QMessagebox error
         return -1;
     }
 
-    Di = buf[0];
+    Di = t;
+    t = 0;
 
-    if (read(fd, &buf[0], 1) != 1)
+    if (read(fd, &t, 1) != 1)
     {
         // QMessagebox error
         return -1;
     }
 
-    Dj = buf[0];
+    Dj = t;
+    t = 0;
 
     if (read(fd, &refDate, 8) != 8)
     {
@@ -343,4 +404,3 @@ int GridData::decode(const char* fname)
 
     return status;
 }
-
