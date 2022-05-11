@@ -7,7 +7,7 @@ class Plotter
 
 public:
 
-    Plotter();
+    Plotter(CustomScene);
 };
 
 #endif // PLOTTER_H

@@ -6,25 +6,21 @@
 #include <unistd.h>
 #include "griddata.h"
 
+
+GridData* GridData::m_gridDataInstance;
+
 GridData::GridData (const char* fname)
 {
+    if(!m_gridDataInstance) {
+        m_gridDataInstance = this;
+    }
+    else {
+        return;
+    }
     decode(fname);
 }
-
 GridData::~GridData ()
 {
-    clearMap(windSpeed);
-    clearMap(windDir);
-    clearMap(pressure);
-    clearMap(waveSigHeight);
-    clearMap(windWaveHeight);
-    clearMap(windWaveDir);
-    clearMap(windWavePer);
-    clearMap(swellWaveHeight);
-    clearMap(swellWaveDir);
-    clearMap(swellWavePer);
-    clearMap(currentSpeed);
-    clearMap(currentDir);
 }
 
 
@@ -45,7 +41,7 @@ void GridData::decodeWindSpeed(int fc, int* fd)
         --fieldsToRead;
 
         double value = t * (100 / 255.0);
-        windSpeed[fc]->push_back(value);
+        windSpeed[fc].push_back(value);
     }
 }
 
@@ -64,7 +60,7 @@ void GridData::decodeWindDir(int fc, int* fd)
         --fieldsToRead;
 
         int value = t * (360 / 255.0);
-        windDir[fc]->push_back(value);
+        windDir[fc].push_back(value);
     }
 }
 
@@ -84,7 +80,7 @@ void GridData::decodePressure(int fc, int* fd)
 
 //        double value = t * (15000 / 255.0);
         double value = t;
-        pressure[fc]->push_back(value);
+        pressure[fc].push_back(value);
     }
 }
 
@@ -103,7 +99,7 @@ void GridData::decodeWaveSigHeight(int fc, int* fd)
         --fieldsToRead;
 
         double value = t * (20 / 255.0);
-        waveSigHeight[fc]->push_back(value);
+        waveSigHeight[fc].push_back(value);
     }
 }
 
@@ -122,7 +118,7 @@ void GridData::decodeWindWaveHeight(int fc, int* fd)
         --fieldsToRead;
 
         double value = t * (30 / 255.0);
-        windWaveHeight[fc]->push_back(value);
+        windWaveHeight[fc].push_back(value);
     }
 }
 
@@ -141,7 +137,7 @@ void GridData::decodeWindWaveDir(int fc, int* fd)
         --fieldsToRead;
 
         int value = t * (360 / 255.0);
-        windWaveDir[fc]->push_back(value);
+        windWaveDir[fc].push_back(value);
     }
 }
 
@@ -164,7 +160,7 @@ void GridData::decodeWindWavePeriod(int fc, int* fd)
             val |= (t & (1 << i));
 
         double value = val * (20 / 15.0);
-        windWavePer[fc]->push_back(value);
+        windWavePer[fc].push_back(value);
         t >>= 4; val = 0;
 
         if (fieldsToRead)
@@ -175,7 +171,7 @@ void GridData::decodeWindWavePeriod(int fc, int* fd)
                 val |= (t & (1 << i));
 
             value = val * (20 / 15.0);
-            windWavePer[fc]->push_back(value);
+            windWavePer[fc].push_back(value);
             t >>= 4; val = 0;
         }
         else
@@ -200,7 +196,7 @@ void GridData::decodeSwellWaveHeight(int fc, int* fd)
         --fieldsToRead;
 
         double value = t * (30 / 255.0);
-        swellWaveHeight[fc]->push_back(value);
+        swellWaveHeight[fc].push_back(value);
     }
 }
 
@@ -219,7 +215,7 @@ void GridData::decodeSwellWaveDir(int fc, int* fd) // 1 byte = 1 cell's Swell Wa
         --fieldsToRead;
 
         double value = t * (360 / 255.0);
-        swellWaveDir[fc]->push_back(value);
+        swellWaveDir[fc].push_back(value);
     }
 }
 
@@ -243,7 +239,7 @@ void GridData::decodeSwellWavePeriod(int fc, int* fd)
             val |= (t & (1 << i));
 
         double value = val * (20 / 15.0);
-        swellWavePer[fc]->push_back(value);
+        swellWavePer[fc].push_back(value);
         t >>= 4;
         val = 0;
 
@@ -251,7 +247,7 @@ void GridData::decodeSwellWavePeriod(int fc, int* fd)
             val |= (t & (1 << i));
 
         value = val * (20 / 15.0);
-        swellWavePer[fc]->push_back(value);
+        swellWavePer[fc].push_back(value);
     }
 }
 
@@ -348,23 +344,3 @@ int GridData::decode(const char* fname)
     return status;
 }
 
-
-
-void GridData::clearMap (unordered_map<int, vector<double>*> map)
-{
-    for (auto it = map.begin(); it != map.end(); it++) {
-        it->second->clear();
-        delete it->second;
-    }
-    map.clear();
-}
-
-
-void GridData::clearMap (unordered_map<int, vector<int>*> map)
-{
-    for (auto it = map.begin(); it != map.end(); it++) {
-        it->second->clear();
-        delete it->second;
-    }
-    map.clear();
-}
