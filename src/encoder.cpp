@@ -155,7 +155,7 @@ void dummyCount()
         {
             ++NiB;
             if (i + Di > 359)
-                    skipped = 359 - i;
+                skipped = 359 - i;
         }
 
         skip = Di - 1 - skipped;
@@ -214,7 +214,7 @@ float degMinSecToDeg(char dir, std::string latLonString)
     return deg;
 }
 
-std::vector<float> getBoundingRect(const std::string &fileName)
+std::vector<float> getBoundingRect(const std::string& fileName)
 {
     vector<float> boundingRect;
     float xMin = 0.0, yMin = 0.0, xMax = 0.0, yMax = 0.0;
@@ -578,7 +578,7 @@ void encodeWind(const std::string& fname)
 
         // wind dir.
         consumeAll(inpstream);
-    
+
         for (int j = yMin + add; j <= yMax + add; j += Dj)
         {
             for (int i = xMin; i <= xMax + 360; i += Di)
@@ -705,7 +705,7 @@ void encodePressure(const std::string& fname)
                 uint16_t encoded = (uint16_t)std::round(values[i][j]);
                 write(_fd, &encoded, 2);
                 if (i + Di > 359)
-                        skipped = 359 - i;
+                    skipped = 359 - i;
             }
         }
 
@@ -745,7 +745,7 @@ void encodeWave4(std::fstream& inpstream)
     {
         for (int i = xMin; i <= xMax + 360; i += Di)
         {
-            uint8_t encoded = (uint8_t)std::round((values[i][j] * 255) / 20.0);
+            uint8_t encoded = (uint8_t)std::round(values[i][j] * 10.0);
             write(_fd, &encoded, 1);
         }
     }
@@ -779,7 +779,6 @@ void encodeWave4(std::fstream& inpstream)
 
     // wind wave period values
     consumeAll(inpstream);
-    uint8_t c = 1;
     uint8_t period = 0;
     std::vector<uint8_t> lin;
 
@@ -823,7 +822,7 @@ void encodeWave3(std::fstream& inpstream)
     {
         for (int i = xMin + 360; i <= 359; i += Di)
         {
-            uint8_t encoded = (uint8_t)std::round((values[i][j] * 255) / 20.0);
+            uint8_t encoded = (uint8_t)std::round(values[i][j] * 10.0);
             write(_fd, &encoded, 1);
             if (i + Di > 359)
                 skipped = 359 - i;
@@ -901,7 +900,6 @@ void encodeWave3(std::fstream& inpstream)
     // wind wave period
     skip = 0;
     skipped = 0;
-    uint8_t c = 1;
     uint8_t period = 0;
     std::vector<uint8_t> lin;
     consumeAll(inpstream);
@@ -959,7 +957,7 @@ void encodeWave2(std::fstream& inpstream)
         {
             for (int i = xMin + 360; i <= xMax + 360; i += Di)
             {
-                uint8_t encoded = (uint8_t)std::round((values[i][j] * 255) / 20.0);
+                uint8_t encoded = (uint8_t)std::round(values[i][j] * 10.0);
                 write(_fd, &encoded, 1);
             }
         }
@@ -1034,7 +1032,7 @@ void encodeWave2(std::fstream& inpstream)
         {
             for (int i = xMin + 360; i <= 359; i += Di)
             {
-                uint8_t encoded = (uint8_t)std::round((values[i][j] * 255) / 20.0);
+                uint8_t encoded = (uint8_t)std::round(values[i][j] * 10.0);
                 write(_fd, &encoded, 1);
                 if (i + Di > 359)
                     skipped = 359 - i;
@@ -1173,7 +1171,7 @@ void encodeWave1(std::fstream& inpstream)
         {
             for (int i = xMin; i <= xMax; i += Di)
             {
-                uint8_t encoded = (uint8_t)std::round((values[i][j] * 255) / 20.0);
+                uint8_t encoded = (uint8_t)std::round(values[i][j] * 10.0);
                 write(_fd, &encoded, 1);
             }
         }
@@ -1249,7 +1247,7 @@ void encodeWave1(std::fstream& inpstream)
         {
             for (int i = xMin; i <= 359; i += Di)
             {
-                uint8_t encoded = (uint8_t)std::round((values[i][j] * 255) / 20.0);
+                uint8_t encoded = (uint8_t)std::round(values[i][j] * 10.0);
                 write(_fd, &encoded, 1);
                 if (i + Di > 359)
                     skipped = 359 - i;
@@ -1951,7 +1949,7 @@ void encodeSwell(const std::string& fname)
 
 void encodeCurrent(const std::string& fname)
 {
-        std::fstream inpstream;
+    std::fstream inpstream;
     inpstream.open(fname);
 
     if (!inpstream.is_open())
@@ -2239,7 +2237,7 @@ void encodeCurrent(const std::string& fname)
 
         // current dir.
         consumeAll(inpstream);
-    
+
         for (int j = yMin + add; j <= yMax + add; j += Dj)
         {
             for (int i = xMin; i <= xMax + 360; i += Di)
@@ -2263,8 +2261,8 @@ void encode()
 
     for (int i = 1; i <= 1; ++i)
     {
-        fname = "wd_" + to_string(i) + ".txt";
-        encodeWind(fname);
+        // fname = "wd_" + to_string(i) + ".txt";
+        // encodeWind(fname);
 
         // fname = "pres_" + to_string(i) + ".txt";
         // encodePressure(fname);
