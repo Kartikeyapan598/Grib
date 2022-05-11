@@ -6,9 +6,7 @@
 #include <unordered_map>
 using namespace std;
 
-class GridData : public Data
-{
-
+class GridData : public Data {
 public:
 
     GridData() = delete;

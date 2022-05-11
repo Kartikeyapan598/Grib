@@ -6,7 +6,6 @@
 #include <unistd.h>
 #include "griddata.h"
 
-
 GridData* GridData::m_gridDataInstance;
 
 GridData::GridData(const char* fname)
@@ -19,11 +18,10 @@ GridData::GridData(const char* fname)
     }
     decode(fname);
 }
+
 GridData::~GridData()
 {
 }
-
-
 
 void GridData::decodeWindSpeed(int fc, int* fd)
 {
@@ -173,7 +171,7 @@ void GridData::decodeWindWavePeriod(int fc, int* fd)
 
             value = val * (20 / 15.0);
             windWavePer[fc].push_back(value);
-            t >>= 4;
+            t = 0;
             val = 0;
         }
         else
@@ -253,7 +251,7 @@ void GridData::decodeSwellWavePeriod(int fc, int* fd)
 
             value = val * (20 / 15.0);
             swellWavePer[fc].push_back(value);
-            t >>= 4;
+            t = 0;
             val = 0;
         }
         else
@@ -273,13 +271,13 @@ void GridData::decodeCurrentSpeed(int fc, int* fd)
         if (read(*fd, &t, 1) != 1)
         {
             // QMsgbox read error
-            // e.g. error reading wind speed data for forecast 'fc'
-            std::cerr << "Error reading wind speed for forecast: " << fc << '\n';
+            // e.g. error reading current speed data for forecast 'fc'
+            std::cerr << "Error reading current speed for forecast: " << fc << '\n';
             return;
         }
         --fieldsToRead;
 
-        double value = t * (100 / 255.0);
+        double value = t * (4 / 255.0);
         currentSpeed[fc].push_back(value);
     }
 }
