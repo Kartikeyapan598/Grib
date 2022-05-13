@@ -10,16 +10,35 @@
 #include <stdint.h>
 #include <unistd.h>
 
+namespace Constants
+{
+    const int WD_FLAG = 0;
+    const int WV_FLAG = 1;
+    const int CR_FLAG = 2;
+
+    const int WD_ROWS = 181;
+    const int WD_COLS = 360;
+
+    const int WV_ROWS = 721;
+    const int WV_COLS = 1440;
+
+    const int CR_ROWS = 481;
+    const int CR_COLS = 1080;
+
+    const int HEADER_LEN = 10;
+
+    const std::string ST_FILE = "wd_1.txt";
+}
+
 using namespace std;
+using namespace Constants;
 
-const int HEADER_LEN = 10;
-const double PI = 3.141592;
-const int ROWS = 181;
-const int COLS = 360;
-const std::string INVALID = "NaN";
+// file descriptor for writing to output binary file
+int _fd;
+int _flag;
+std::string INV = "NaN";
 
-int _fd; // file descriptor for writing to output binary file
-
+// header info for output file
 float xMin;
 float yMin;
 float xMax;
@@ -31,7 +50,7 @@ int Dj;
 time_t refTime;
 int nbForecasts;
 
-// header info from input file (first wind file)
+// header info from optimized csv
 float xMinB;
 float yMinB;
 float xMaxB;
@@ -43,9 +62,28 @@ int DjB;
 std::string refTimeB;
 int nbForecastsB;
 
-std::vector<std::vector<float>> values(ROWS, std::vector<float>(COLS, 0.0f));
+// storage
+std::vector<std::vector<float>> values(WD_ROWS, std::vector<float>(WD_COLS, 0.0f));
+std::vector<std::vector<float>> wv_values(WV_ROWS, std::vector<float>(WV_COLS, 0.0f));
+std::vector<std::vector<float>> cr_values(CR_ROWS, std::vector<float>(CR_COLS, 0.0f));
 
-/* UTIL FNs */
+/* UTIL funcs */
+
+void skipHeaderInitial(std::fstream& inpstream) // do not mutate
+{
+    std::string line;
+
+    for (int i = 0; i < HEADER_LEN; ++i)
+    {
+        std::getline(inpstream, line);
+        if (i == 8)
+        {
+            refTimeB = line;
+            break;
+        }
+        line.clear();
+    }
+}
 
 void skipHeader(std::fstream& inpstream)
 {
@@ -55,43 +93,93 @@ void skipHeader(std::fstream& inpstream)
         std::getline(inpstream, line);
 }
 
-void consumeAll(std::fstream& inpstream)
+void extractAll(std::fstream& inpstream)
 {
     std::string line;
 
-    for (int i = 0; i < ROWS; ++i)
+    if (_flag == WD_FLAG)
     {
-        for (int j = 0; j < COLS; ++j)
+        for (int i = 0; i < WD_ROWS; ++i)
         {
-            std::getline(inpstream, line);
+            for (int j = 0; j < WD_COLS; ++j)
+            {
+                std::getline(inpstream, line);
 
-            if (line == INVALID)
-                values[i][j] = 0;
-            else
-                values[i][j] = stof(line);
-            // cout << values[i][j] << '\n';
-            line.clear();
+                if (line != INV)
+                    values[i][j] = std::stof(line);
+                else
+                    values[i][j] = 0.0f;
+                // cout << values[i][j] << '\n';
+                line.clear();
+            }
         }
     }
+    else if (_flag == WV_FLAG)
+    {
+        int skip = 4;
 
+        for (int i = 0; i < WV_ROWS; ++i)
+        {
+            for (int j = 0; j < WV_COLS; ++j)
+            {
+                std::getline(inpstream, line);
+
+                if (line != INV)
+                    wv_values[i][j] = std::stof(line);
+                else
+                    wv_values[i][j] = 0.0f;
+                // cout << wv_values[i][j] << '\n';
+                line.clear();
+            }
+        }
+
+        for (int i = 0; i < WV_ROWS; i += skip)
+            for (int j = 0; j < WV_COLS; j += skip)
+                values[i / skip][j / skip] = wv_values[i][j];
+    }
+    else if (_flag == CR_FLAG)
+    {
+        int skip = 3;
+
+        // 481 * 1080 = 519480 values
+        for (int i = 0; i < CR_ROWS; ++i)
+        {
+            for (int j = 0; j < CR_COLS; ++j)
+            {
+                std::getline(inpstream, line);
+                // cout << line << '\n';
+
+                if (line != INV)
+                    cr_values[i][j] = std::stof(line);
+
+                // cout << cr_values[i][j] << '\n';
+                line.clear();
+            }
+        }
+
+        for (int i = 0; i < CR_ROWS; i += skip)
+            for (int j = 0; j < CR_COLS; j += skip)
+                values[i / skip][j / skip] = cr_values[i][j];
+    }
     // cout << "Header consumed\n";
 }
 
-void dummyCount()
+void countNiNj()
 {
-    // use first wind file by default
     std::fstream inpstream;
-    inpstream.open("wd_1.txt");
+    inpstream.open(ST_FILE);
 
     if (!inpstream.is_open())
     {
-        std::cerr << "Error opening first wind file for dummyCount()\n";
+        std::cerr << "Error opening file " << ST_FILE << '\n';
         return;
     }
 
+    skipHeaderInitial(inpstream);
+    inpstream.close();
+
     int add = 90;
     NiB = NjB = 0;
-    consumeAll(inpstream);
 
     for (int j = yMin + add; j <= yMax + add; j += Dj)
         ++NjB;
@@ -168,8 +256,6 @@ void dummyCount()
         for (int i = xMin; i <= xMax + 360; i += Di)
             ++NiB;
     }
-
-    inpstream.close();
 }
 
 float degMinSecToDeg(char dir, std::string latLonString)
@@ -286,7 +372,7 @@ std::vector<float> getBoundingRect(const std::string& fileName)
     return boundingRect;
 }
 
-/* ENCODING */
+/* ENCODING funcs */
 
 void encodeWind(const std::string& fname)
 {
@@ -312,7 +398,7 @@ void encodeWind(const std::string& fname)
         {
             // wind speed
             // int c = 0;
-            consumeAll(inpstream);
+            extractAll(inpstream);
 
             for (int j = yMin + add; j <= yMax + add; j += Dj)
             {
@@ -325,14 +411,12 @@ void encodeWind(const std::string& fname)
             }
 
             // wind dir.
-            consumeAll(inpstream);
+            extractAll(inpstream);
 
             for (int j = yMin + add; j <= yMax + add; j += Dj)
             {
                 for (int i = xMin; i <= xMax; i += Di)
                 {
-                    values[i][j] = values[i][j] * (180 / PI);
-
                     if (std::signbit(values[i][j]))
                         values[i][j] = 360.0 + values[i][j];
 
@@ -344,7 +428,7 @@ void encodeWind(const std::string& fname)
         else
         {
             // wind speed
-            consumeAll(inpstream);
+            extractAll(inpstream);
             int skip = 0;
             int skipped = 0;
 
@@ -374,7 +458,7 @@ void encodeWind(const std::string& fname)
             // wind dir.
             skip = 0;
             skipped = 0;
-            consumeAll(inpstream); // consumes (181 * 360) wind dir values
+            extractAll(inpstream); // consumes (181 * 360) wind dir values
             for (int j = yMin + add; j <= yMax + add; j += Dj)
             {
                 for (int i = xMin; i <= 359; i += Di)
@@ -409,7 +493,7 @@ void encodeWind(const std::string& fname)
         if (xMin < xMax)
         {
             // wind speed
-            consumeAll(inpstream);
+            extractAll(inpstream);
 
             for (int j = yMin + add; j <= yMax + add; j += Dj)
             {
@@ -421,14 +505,12 @@ void encodeWind(const std::string& fname)
             }
 
             // wind dir.
-            consumeAll(inpstream);
+            extractAll(inpstream);
 
             for (int j = yMin + add; j <= yMax + add; j += Dj)
             {
                 for (int i = xMin + 360; i <= xMax + 360; i += Di)
                 {
-                    values[i][j] = values[i][j] * (180 / PI);
-
                     if (std::signbit(values[i][j]))
                         values[i][j] = 360.0 + values[i][j];
 
@@ -442,7 +524,7 @@ void encodeWind(const std::string& fname)
             // wind speed
             int skip = 0;
             int skipped = 0;
-            consumeAll(inpstream);
+            extractAll(inpstream);
 
             for (int j = yMin + add; j <= yMax + add; j += Dj)
             {
@@ -469,7 +551,7 @@ void encodeWind(const std::string& fname)
             // wind dir.
             skip = 0;
             skipped = 0;
-            consumeAll(inpstream);
+            extractAll(inpstream);
 
             for (int j = yMin + add; j <= yMax + add; j += Dj)
             {
@@ -505,7 +587,7 @@ void encodeWind(const std::string& fname)
         // wind speed
         int skip = 0;
         int skipped = 0;
-        consumeAll(inpstream);
+        extractAll(inpstream);
 
         for (int j = yMin + add; j <= yMax + add; j += Dj)
         {
@@ -532,7 +614,7 @@ void encodeWind(const std::string& fname)
         // wind dir.
         skip = 0;
         skipped = 0;
-        consumeAll(inpstream);
+        extractAll(inpstream);
 
         for (int j = yMin + add; j <= yMax + add; j += Dj)
         {
@@ -565,7 +647,7 @@ void encodeWind(const std::string& fname)
     else if (!std::signbit(xMin) && std::signbit(xMax)) // >= 0 && < 0
     {
         // wind speed
-        consumeAll(inpstream);
+        extractAll(inpstream);
 
         for (int j = yMin + add; j <= yMax + add; j += Dj)
         {
@@ -577,7 +659,7 @@ void encodeWind(const std::string& fname)
         }
 
         // wind dir.
-        consumeAll(inpstream);
+        extractAll(inpstream);
 
         for (int j = yMin + add; j <= yMax + add; j += Dj)
         {
@@ -607,9 +689,10 @@ void encodePressure(const std::string& fname)
     }
 
     int add = 90;
-    std::string line;
 
     skipHeader(inpstream);
+
+    extractAll(inpstream);
 
     if (!std::signbit(xMin) && !std::signbit(xMax))
     {
@@ -739,7 +822,7 @@ void encodeWave4(std::fstream& inpstream)
 {
     // wave sig height values
     int add = 90;
-    consumeAll(inpstream);
+    extractAll(inpstream);
 
     for (int j = yMin + add; j <= yMax + add; j += Dj)
     {
@@ -751,7 +834,7 @@ void encodeWave4(std::fstream& inpstream)
     }
 
     // wind wave height values
-    consumeAll(inpstream);
+    extractAll(inpstream);
 
     for (int j = yMin + add; j <= yMax + add; j += Dj)
     {
@@ -763,7 +846,7 @@ void encodeWave4(std::fstream& inpstream)
     }
 
     // wind wave dir. values
-    consumeAll(inpstream);
+    extractAll(inpstream);
 
     for (int j = yMin + add; j <= yMax + add; j += Dj)
     {
@@ -778,7 +861,7 @@ void encodeWave4(std::fstream& inpstream)
     }
 
     // wind wave period values
-    consumeAll(inpstream);
+    extractAll(inpstream);
     uint8_t period = 0;
     std::vector<uint8_t> lin;
 
@@ -816,7 +899,7 @@ void encodeWave3(std::fstream& inpstream)
     int add = 90;
     int skip = 0;
     int skipped = 0;
-    consumeAll(inpstream);
+    extractAll(inpstream);
 
     for (int j = yMin + add; j <= yMax + add; j += Dj)
     {
@@ -843,7 +926,7 @@ void encodeWave3(std::fstream& inpstream)
     // wind wave height
     skip = 0;
     skipped = 0;
-    consumeAll(inpstream);
+    extractAll(inpstream);
 
     for (int j = yMin + add; j <= yMax + add; j += Dj)
     {
@@ -870,7 +953,7 @@ void encodeWave3(std::fstream& inpstream)
     // wind wave dir.
     skip = 0;
     skipped = 0;
-    consumeAll(inpstream);
+    extractAll(inpstream);
 
     for (int j = yMin + add; j <= yMax + add; j += Dj)
     {
@@ -902,7 +985,7 @@ void encodeWave3(std::fstream& inpstream)
     skipped = 0;
     uint8_t period = 0;
     std::vector<uint8_t> lin;
-    consumeAll(inpstream);
+    extractAll(inpstream);
 
     for (int j = yMin + add; j <= yMax + add; j += Dj)
     {
@@ -951,7 +1034,7 @@ void encodeWave2(std::fstream& inpstream)
     if (xMin < xMax)
     {
         // wave sig height values
-        consumeAll(inpstream);
+        extractAll(inpstream);
 
         for (int j = yMin + add; j <= yMax + add; j += Dj)
         {
@@ -963,7 +1046,7 @@ void encodeWave2(std::fstream& inpstream)
         }
 
         // wind wave height values
-        consumeAll(inpstream);
+        extractAll(inpstream);
 
         for (int j = yMin + add; j <= yMax + add; j += Dj)
         {
@@ -975,7 +1058,7 @@ void encodeWave2(std::fstream& inpstream)
         }
 
         // wind wave dir. values
-        consumeAll(inpstream);
+        extractAll(inpstream);
 
         for (int j = yMin + add; j <= yMax + add; j += Dj)
         {
@@ -990,7 +1073,7 @@ void encodeWave2(std::fstream& inpstream)
         }
 
         // wind wave period values
-        consumeAll(inpstream);
+        extractAll(inpstream);
         uint8_t period = 0;
         std::vector<uint8_t> lin;
 
@@ -1026,7 +1109,7 @@ void encodeWave2(std::fstream& inpstream)
         // wave sig height
         int skip = 0;
         int skipped = 0;
-        consumeAll(inpstream);
+        extractAll(inpstream);
 
         for (int j = yMin + add; j <= yMax + add; j += Dj)
         {
@@ -1053,7 +1136,7 @@ void encodeWave2(std::fstream& inpstream)
         // wind wave height
         skip = 0;
         skipped = 0;
-        consumeAll(inpstream);
+        extractAll(inpstream);
 
         for (int j = yMin + add; j <= yMax + add; j += Dj)
         {
@@ -1080,7 +1163,7 @@ void encodeWave2(std::fstream& inpstream)
         // wind wave dir.
         skip = 0;
         skipped = 0;
-        consumeAll(inpstream);
+        extractAll(inpstream);
 
         for (int j = yMin + add; j <= yMax + add; j += Dj)
         {
@@ -1115,7 +1198,7 @@ void encodeWave2(std::fstream& inpstream)
         skipped = 0;
         uint8_t period = 0;
         std::vector<uint8_t> lin;
-        consumeAll(inpstream);
+        extractAll(inpstream);
 
         for (int j = yMin + add; j <= yMax + add; j += Dj)
         {
@@ -1165,31 +1248,33 @@ void encodeWave1(std::fstream& inpstream)
     if (xMin < xMax)
     {
         // wave sig height values
-        consumeAll(inpstream);
+        extractAll(inpstream);
 
         for (int j = yMin + add; j <= yMax + add; j += Dj)
         {
             for (int i = xMin; i <= xMax; i += Di)
             {
                 uint8_t encoded = (uint8_t)std::round(values[i][j] * 10.0);
+                // cout << (uint32_t)encoded << '\n';
                 write(_fd, &encoded, 1);
             }
         }
 
         // wind wave height values
-        consumeAll(inpstream);
+        extractAll(inpstream);
 
         for (int j = yMin + add; j <= yMax + add; j += Dj)
         {
             for (int i = xMin; i <= xMax; i += Di)
             {
                 uint8_t encoded = (uint8_t)std::round((values[i][j] * 255) / 30.0);
+                // cout << (uint32_t)encoded << '\n';
                 write(_fd, &encoded, 1);
             }
         }
 
         // wind wave dir. values
-        consumeAll(inpstream);
+        extractAll(inpstream);
 
         for (int j = yMin + add; j <= yMax + add; j += Dj)
         {
@@ -1199,12 +1284,13 @@ void encodeWave1(std::fstream& inpstream)
                     values[i][j] = 360.0 + values[i][j];
 
                 uint8_t encoded = (uint8_t)std::round((values[i][j] * 255) / 360.0);
+                // cout << (uint32_t)encoded << '\n';
                 write(_fd, &encoded, 1);
             }
         }
 
         // wind wave period values
-        consumeAll(inpstream);
+        extractAll(inpstream);
         uint8_t c = 1;
         uint8_t period = 0;
         std::vector<uint8_t> lin;
@@ -1219,6 +1305,7 @@ void encodeWave1(std::fstream& inpstream)
             {
                 period |= (lin[i - 1] << 4);
                 period |= (lin[i]);
+                // cout << (uint32_t)period << '\n';
                 write(_fd, &period, 1);
                 period = 0;
             }
@@ -1229,10 +1316,12 @@ void encodeWave1(std::fstream& inpstream)
             {
                 period |= (lin[i - 1] << 4);
                 period |= (lin[i]);
+                // cout << (uint32_t)period << '\n';
                 write(_fd, &period, 1);
                 period = 0;
             }
             period |= lin.back();
+            // cout << (uint32_t)period << '\n';
             write(_fd, &period, 1);
         }
     }
@@ -1241,7 +1330,7 @@ void encodeWave1(std::fstream& inpstream)
         // wave sig height
         int skip = 0;
         int skipped = 0;
-        consumeAll(inpstream);
+        extractAll(inpstream);
 
         for (int j = yMin + add; j <= yMax + add; j += Dj)
         {
@@ -1268,7 +1357,7 @@ void encodeWave1(std::fstream& inpstream)
         // wind wave height
         skip = 0;
         skipped = 0;
-        consumeAll(inpstream);
+        extractAll(inpstream);
 
         for (int j = yMin + add; j <= yMax + add; j += Dj)
         {
@@ -1295,7 +1384,7 @@ void encodeWave1(std::fstream& inpstream)
         // wind wave dir.
         skip = 0;
         skipped = 0;
-        consumeAll(inpstream);
+        extractAll(inpstream);
 
         for (int j = yMin + add; j <= yMax + add; j += Dj)
         {
@@ -1331,7 +1420,7 @@ void encodeWave1(std::fstream& inpstream)
         uint8_t c = 1;
         uint8_t period = 0;
         std::vector<uint8_t> lin;
-        consumeAll(inpstream);
+        extractAll(inpstream);
 
         for (int j = yMin + add; j <= yMax + add; j += Dj)
         {
@@ -1403,7 +1492,7 @@ void encodeSwell4(std::fstream& inpstream)
 {
     // swell wave height values
     int add = 90;
-    consumeAll(inpstream);
+    extractAll(inpstream);
 
     for (int j = yMin + add; j <= yMax + add; j += Dj)
     {
@@ -1415,7 +1504,7 @@ void encodeSwell4(std::fstream& inpstream)
     }
 
     // swell wave dir. values
-    consumeAll(inpstream);
+    extractAll(inpstream);
 
     for (int j = yMin + add; j <= yMax + add; j += Dj)
     {
@@ -1430,7 +1519,7 @@ void encodeSwell4(std::fstream& inpstream)
     }
 
     // swell wave period values
-    consumeAll(inpstream);
+    extractAll(inpstream);
     uint8_t c = 1;
     uint8_t period = 0;
     std::vector<uint8_t> lin;
@@ -1469,7 +1558,7 @@ void encodeSwell3(std::fstream& inpstream)
     int add = 90;
     int skip = 0;
     int skipped = 0;
-    consumeAll(inpstream);
+    extractAll(inpstream);
 
     for (int j = yMin + add; j <= yMax + add; j += Dj)
     {
@@ -1496,7 +1585,7 @@ void encodeSwell3(std::fstream& inpstream)
     // swell wave dir.
     skip = 0;
     skipped = 0;
-    consumeAll(inpstream);
+    extractAll(inpstream);
 
     for (int j = yMin + add; j <= yMax + add; j += Dj)
     {
@@ -1528,7 +1617,7 @@ void encodeSwell3(std::fstream& inpstream)
     skipped = 0;
     uint8_t period = 0;
     std::vector<uint8_t> lin;
-    consumeAll(inpstream);
+    extractAll(inpstream);
 
     for (int j = yMin + add; j <= yMax + add; j += Dj)
     {
@@ -1577,7 +1666,7 @@ void encodeSwell2(std::fstream& inpstream)
     if (xMin < xMax)
     {
         // swell wave height values
-        consumeAll(inpstream);
+        extractAll(inpstream);
 
         for (int j = yMin + add; j <= yMax + add; j += Dj)
         {
@@ -1589,7 +1678,7 @@ void encodeSwell2(std::fstream& inpstream)
         }
 
         // swell wave dir. values
-        consumeAll(inpstream);
+        extractAll(inpstream);
 
         for (int j = yMin + add; j <= yMax + add; j += Dj)
         {
@@ -1604,7 +1693,7 @@ void encodeSwell2(std::fstream& inpstream)
         }
 
         // swell wave period values
-        consumeAll(inpstream);
+        extractAll(inpstream);
         uint8_t c = 1;
         uint8_t period = 0;
         std::vector<uint8_t> lin;
@@ -1641,7 +1730,7 @@ void encodeSwell2(std::fstream& inpstream)
         // swell wave height
         int skip = 0;
         int skipped = 0;
-        consumeAll(inpstream);
+        extractAll(inpstream);
 
         for (int j = yMin + add; j <= yMax + add; j += Dj)
         {
@@ -1668,7 +1757,7 @@ void encodeSwell2(std::fstream& inpstream)
         // swell wave dir.
         skip = 0;
         skipped = 0;
-        consumeAll(inpstream);
+        extractAll(inpstream);
 
         for (int j = yMin + add; j <= yMax + add; j += Dj)
         {
@@ -1704,7 +1793,7 @@ void encodeSwell2(std::fstream& inpstream)
         uint8_t c = 1;
         uint8_t period = 0;
         std::vector<uint8_t> lin;
-        consumeAll(inpstream);
+        extractAll(inpstream);
 
         for (int j = yMin + add; j <= yMax + add; j += Dj)
         {
@@ -1754,7 +1843,7 @@ void encodeSwell1(std::fstream& inpstream)
     if (xMin < xMax)
     {
         // swell wave height values
-        consumeAll(inpstream);
+        extractAll(inpstream);
 
         for (int j = yMin + add; j <= yMax + add; j += Dj)
         {
@@ -1766,7 +1855,7 @@ void encodeSwell1(std::fstream& inpstream)
         }
 
         // swell wave dir. values
-        consumeAll(inpstream);
+        extractAll(inpstream);
 
         for (int j = yMin + add; j <= yMax + add; j += Dj)
         {
@@ -1781,7 +1870,7 @@ void encodeSwell1(std::fstream& inpstream)
         }
 
         // swell wave period values
-        consumeAll(inpstream);
+        extractAll(inpstream);
         uint8_t period = 0;
         std::vector<uint8_t> lin;
 
@@ -1817,7 +1906,7 @@ void encodeSwell1(std::fstream& inpstream)
         // swell wave height
         int skip = 0;
         int skipped = 0;
-        consumeAll(inpstream);
+        extractAll(inpstream);
 
         for (int j = yMin + add; j <= yMax + add; j += Dj)
         {
@@ -1844,7 +1933,7 @@ void encodeSwell1(std::fstream& inpstream)
         // swell wave dir.
         skip = 0;
         skipped = 0;
-        consumeAll(inpstream);
+        extractAll(inpstream);
 
         for (int j = yMin + add; j <= yMax + add; j += Dj)
         {
@@ -1879,7 +1968,7 @@ void encodeSwell1(std::fstream& inpstream)
         skipped = 0;
         uint8_t period = 0;
         std::vector<uint8_t> lin;
-        consumeAll(inpstream);
+        extractAll(inpstream);
 
         for (int j = yMin + add; j <= yMax + add; j += Dj)
         {
@@ -1959,39 +2048,33 @@ void encodeCurrent(const std::string& fname)
     }
 
     int add = 90;
-    std::string line;
 
     skipHeader(inpstream);
-
-    // cout << "Skipped header\n";
 
     if (!std::signbit(xMin) && !std::signbit(xMax)) // both >= 0
     {
         if (xMin < xMax)
         {
-            // wind speed
-            // int c = 0;
-            consumeAll(inpstream);
+            // current speed
+            extractAll(inpstream);
 
             for (int j = yMin + add; j <= yMax + add; j += Dj)
             {
                 for (int i = xMin; i <= xMax; i += Di)
                 {
-                    // ++c;
                     uint8_t encoded = (uint8_t)std::round((values[i][j] * 255) / 4.0);
+                    // cout << values[i][j] << '\n';
                     write(_fd, &encoded, 1);
                 }
             }
 
-            // wind dir.
-            consumeAll(inpstream);
+            // current dir.
+            extractAll(inpstream);
 
             for (int j = yMin + add; j <= yMax + add; j += Dj)
             {
                 for (int i = xMin; i <= xMax; i += Di)
                 {
-                    values[i][j] = values[i][j] * (180 / PI);
-
                     if (std::signbit(values[i][j]))
                         values[i][j] = 360.0 + values[i][j];
 
@@ -2002,8 +2085,8 @@ void encodeCurrent(const std::string& fname)
         }
         else
         {
-            // wind speed
-            consumeAll(inpstream);
+            // current speed
+            extractAll(inpstream);
             int skip = 0;
             int skipped = 0;
 
@@ -2030,10 +2113,11 @@ void encodeCurrent(const std::string& fname)
             }
 
 
-            // wind dir.
+            // current dir.
             skip = 0;
             skipped = 0;
-            consumeAll(inpstream); // consumes (181 * 360) wind dir values
+            extractAll(inpstream);
+
             for (int j = yMin + add; j <= yMax + add; j += Dj)
             {
                 for (int i = xMin; i <= 359; i += Di)
@@ -2067,8 +2151,8 @@ void encodeCurrent(const std::string& fname)
     {
         if (xMin < xMax)
         {
-            // wind speed
-            consumeAll(inpstream);
+            // current speed
+            extractAll(inpstream);
 
             for (int j = yMin + add; j <= yMax + add; j += Dj)
             {
@@ -2079,15 +2163,13 @@ void encodeCurrent(const std::string& fname)
                 }
             }
 
-            // wind dir.
-            consumeAll(inpstream);
+            // current dir.
+            extractAll(inpstream);
 
             for (int j = yMin + add; j <= yMax + add; j += Dj)
             {
                 for (int i = xMin + 360; i <= xMax + 360; i += Di)
                 {
-                    values[i][j] = values[i][j] * (180 / PI);
-
                     if (std::signbit(values[i][j]))
                         values[i][j] = 360.0 + values[i][j];
 
@@ -2098,10 +2180,10 @@ void encodeCurrent(const std::string& fname)
         }
         else
         {
-            // wind speed
+            // current speed
             int skip = 0;
             int skipped = 0;
-            consumeAll(inpstream);
+            extractAll(inpstream);
 
             for (int j = yMin + add; j <= yMax + add; j += Dj)
             {
@@ -2125,10 +2207,10 @@ void encodeCurrent(const std::string& fname)
                 }
             }
 
-            // wind dir.
+            // current dir.
             skip = 0;
             skipped = 0;
-            consumeAll(inpstream);
+            extractAll(inpstream);
 
             for (int j = yMin + add; j <= yMax + add; j += Dj)
             {
@@ -2161,10 +2243,10 @@ void encodeCurrent(const std::string& fname)
     }
     else if (std::signbit(xMin) && !std::signbit(xMax)) // < 0 && >= 0
     {
-        // wind speed
+        // current speed
         int skip = 0;
         int skipped = 0;
-        consumeAll(inpstream);
+        extractAll(inpstream);
 
         for (int j = yMin + add; j <= yMax + add; j += Dj)
         {
@@ -2188,10 +2270,10 @@ void encodeCurrent(const std::string& fname)
             }
         }
 
-        // wind dir.
+        // current dir.
         skip = 0;
         skipped = 0;
-        consumeAll(inpstream);
+        extractAll(inpstream);
 
         for (int j = yMin + add; j <= yMax + add; j += Dj)
         {
@@ -2224,7 +2306,7 @@ void encodeCurrent(const std::string& fname)
     else if (!std::signbit(xMin) && std::signbit(xMax)) // >= 0 && < 0
     {
         // current speed
-        consumeAll(inpstream);
+        extractAll(inpstream);
 
         for (int j = yMin + add; j <= yMax + add; j += Dj)
         {
@@ -2236,7 +2318,7 @@ void encodeCurrent(const std::string& fname)
         }
 
         // current dir.
-        consumeAll(inpstream);
+        extractAll(inpstream);
 
         for (int j = yMin + add; j <= yMax + add; j += Dj)
         {
@@ -2257,21 +2339,26 @@ void encodeCurrent(const std::string& fname)
 void encode()
 {
     std::string fname;
-    cout << nbForecasts << '\n';
 
-    for (int i = 1; i <= 1; ++i)
+    for (int i = 1; i <= nbForecasts; ++i)
     {
-        // fname = "wd_" + to_string(i) + ".txt";
-        // encodeWind(fname);
+        _flag = WD_FLAG;
+        fname = "wd_" + to_string(i) + ".txt";
+        encodeWind(fname);
 
         // fname = "pres_" + to_string(i) + ".txt";
         // encodePressure(fname);
 
+        _flag = WV_FLAG;
         fname = "wv_" + to_string(i) + ".txt";
         encodeWave(fname);
 
         // fname = "sw_" + to_string(i) + ".txt";
         // encodeSwell(fname);
+
+        _flag = CR_FLAG;
+        fname = "curr_" + to_string(i) + ".txt";
+        encodeCurrent(fname);
     }
 }
 
@@ -2308,7 +2395,7 @@ void setupHeaderInfo()
     cout << DjB << '\n';
 
     time_t time = refTime;
-    cout << "        " << '\n';
+    cout << time << '\n';
     write(_fd, &refTimeB, sizeof(time_t));
 
     nbForecastsB = nbForecasts;
@@ -2316,7 +2403,7 @@ void setupHeaderInfo()
     write(_fd, &nbForecastsB, sizeof(int));
 }
 
-int main(int argc, char** argv) // args : resolution
+int main(int argc, char** argv) // args(2) : [ resolution, number of valid forecasts ]
 {
     const char* outfile = "out.krup";
     _fd = open(outfile, O_RDWR);
@@ -2333,6 +2420,10 @@ int main(int argc, char** argv) // args : resolution
         return 1;
     }
 
+    /* do not mutate */
+    INV += (int)13;
+    /* ------------- */
+
     std::string s;
     s = argv[1];
 
@@ -2345,7 +2436,7 @@ int main(int argc, char** argv) // args : resolution
     std::string presDr("pressure_folder"); // pressure folder
     std::string currDr("current_folder");  // current folder
 
-    // // getting bounding rectangle
+    // getting bounding rectangle
     std::string csvFileName("my_data.csv");
     std::vector<float> boundingRect = getBoundingRect(csvFileName);
 
@@ -2356,18 +2447,18 @@ int main(int argc, char** argv) // args : resolution
     Ni = xMax - xMin;
     Nj = yMax - yMin;
 
-    // // calculate time_t from string refTimeB   2022-04-30T12
-    // // tm time{ 0 };
-    // // time.tm_year = stoi(refTimeB.substr(0, 4)) - 1900;
-    // // time.tm_mon = stoi(refTimeB.substr(5, 2)) - 1;
-    // // time.tm_mday = stoi(refTimeB.substr(8, 2));
-    // // time.tm_hour = stoi(refTimeB.substr(11, 2));
-    // // time.tm_min = 0;
-    // // time.tm_sec = 0;
-    // // time.tm_isdst = 0;
-    // // refTime = mktime(&time);
+    countNiNj(); // to count Ni, Nj
 
-    dummyCount(); // to count Ni, Nj
+    // calculate time_t from string refTimeB   2022-04-30T12
+    tm time{ 0 };
+    time.tm_year = stoi(refTimeB.substr(0, 4)) - 1900;
+    time.tm_mon = stoi(refTimeB.substr(5, 2)) - 1;
+    time.tm_mday = stoi(refTimeB.substr(8, 2));
+    time.tm_hour = stoi(refTimeB.substr(11, 2));
+    time.tm_min = 0;
+    time.tm_sec = 0;
+    time.tm_isdst = 0;
+    refTime = mktime(&time);
 
     setupHeaderInfo();
 
