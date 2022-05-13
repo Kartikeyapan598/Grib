@@ -223,7 +223,7 @@ void GridData::decodeSwellWavePeriod(int fc, int* fd)
 {
     uint8_t t = 0;
     uint8_t val = 0;
-    int fieldsToRead = ni * nj;
+    int fieldsToRead = Ni * Nj;
 
     while (fieldsToRead > 0)
     {
@@ -264,7 +264,7 @@ void GridData::decodeSwellWavePeriod(int fc, int* fd)
 void GridData::decodeCurrentSpeed(int fc, int* fd)
 {
     uint8_t t = 0;
-    int fieldsToRead = ni * nj;
+    int fieldsToRead = Ni * Nj;
 
     while (fieldsToRead)
     {
@@ -285,7 +285,7 @@ void GridData::decodeCurrentSpeed(int fc, int* fd)
 void GridData::decodeCurrentDir(int fc, int* fd)
 {
     uint8_t t = 0;
-    int fieldsToRead = ni * nj;
+    int fieldsToRead = Ni * Nj;
 
     while (fieldsToRead)
     {
