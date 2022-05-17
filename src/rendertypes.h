@@ -2,28 +2,55 @@
 
 #include <QDialog>
 
-namespace Ui {
-class RenderTypes;
+namespace Ui
+{
+    class RenderTypes;
 }
 
 class RenderTypes : public QDialog
 {
     Q_OBJECT
 public:
+
     explicit RenderTypes(QWidget *parent = nullptr);
     ~RenderTypes();
 
-private slots:
-    void on_checkBox_clicked();
+private :
+    bool MultiHeightBoxWarning(bool a, bool b, bool c);
 
-    void on_checkBox_3_clicked();
+public slots:
 
-    void on_checkBox_2_clicked();
-
+//    void on_checkBox_clicked();
+//    void on_checkBox_3_clicked();
+//    void on_checkBox_2_clicked();
     void on_pushButton_clicked();
 
+private slots:
+
+
+
+//    void on_WaveGroupBox_clicked();
+
+    void on_SHeightWindSwellBox_clicked();
+
+    void on_SwellWaveHeightBox_clicked();
+
+    void on_WindWaveHeightBox_clicked();
+
+    void on_CurrentBox_clicked();
+
+    void on_SwellWaveDirectionBox_clicked();
+
+    void on_WindWaveDirectionBox_clicked();
+
+    void on_WindSpeedColorBox_clicked();
+
+    void on_WindBarbsBox_clicked();
+
 private:
+
     Ui::RenderTypes *ui;
     bool m_weather, m_temp, m_wind;
+
 };
 

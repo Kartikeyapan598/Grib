@@ -20,7 +20,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>25</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -28,6 +28,7 @@
      <string>File</string>
     </property>
     <addaction name="actionOpen"/>
+    <addaction name="actionUpload_CSV"/>
     <addaction name="actionClose"/>
     <addaction name="actionNew"/>
     <addaction name="actionSave"/>
@@ -58,7 +59,7 @@
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionOpen">
    <property name="text">
-    <string>Open </string>
+    <string>Open Weather File</string>
    </property>
   </action>
   <action name="actionClose">
@@ -122,6 +123,11 @@
   <action name="actionDraw_Circle">
    <property name="text">
     <string>Draw Circle</string>
+   </property>
+  </action>
+  <action name="actionUpload_CSV">
+   <property name="text">
+    <string>Upload CSV</string>
    </property>
   </action>
  </widget>
