@@ -16,8 +16,11 @@ Form::Form(QWidget *parent, CustomScene* scene)
 
     m_view->setScene(m_scene);
     m_view->setBackgroundBrush(QBrush(QColor(80, 180, 200), Qt::SolidPattern));
+    m_view->setDragMode(QGraphicsView::ScrollHandDrag);
     m_layout = this->layout();
     m_layout->addWidget(m_view);
+
+
     this->setLayout(m_layout);
 }
 

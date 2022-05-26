@@ -8,15 +8,18 @@
 #include <QGraphicsScene>
 
 #include "form.h"
-#include "points.h"
-#include "Square.h"
+//#include "points.h"
+//#include "Square.h"
 #include "rendertypes.h"
 #include "customscene.h"
 #include "customview.h"
-//#include "DownloadManager.h"
+#include "DownloadManager.h"
 #include "griddata.h"
 #include <vector>
 #include "data.h"
+#include "plotter.h"
+#include "csvroutes.h"
+#include "infopanel.h"
 
 using namespace std;
 
@@ -43,54 +46,59 @@ public:
     static MainWindow& GetMainWindowInstance () { return *m_instance; }
     void UpdateRenders ();
 
-    void addWindArrowPlot(int fc);
-    void addWindColorPlot(int fc);
-    void addWaveSigHtColorPlot(int fc);
-    void addWindWaveHtColorPlot(int fc);
-    void addWindWaveArrowPlot(int fc);
-    void addSwellWaveHtColorPlot(int fc);
-    void addSwellWaveArrowPlot(int fc);
-    void addCurrentArrowPlot(int fc);
+    Plotter &getPlotter(int fc) { return *(m_plotters.at(fc)); }
 
-    void removeWindArrowPlot(int fc);
-    void removeWindColorPlot(int fc);
-    void removeWaveSigHtColorPlot(int fc);
-    void removeWindWaveHtColorPlot(int fc);
-    void removeWindWaveArrowPlot(int fc);
-    void removeSwellWaveHtColorPlot(int fc);
-    void removeSwellWaveArrowPlot(int fc);
-    void removeCurrentArrowPlot(int fc);
+    time_t getRefDt () const { return gridData->getRefDate(); }
+    int getNbFc () const { return gridData->getNbForecasts(); }
+
+    void addCsvRoutePlot();
+
+    bool windSpeedOnScene() {return isWindSpeedOnScene;}
+    bool windArrowsOnScene() { return areWindArrowsOnScene; }
+    bool waveSigHtOnScene() { return isWaveSigHtOnScene; }
+    bool windWaveHtOnScene() { return isWindWaveHtOnScene; }
+    bool windWaveArrowsOnScene() { return areWindWaveArrowsOnScene; }
+    bool swellWaveHtOnScene() { return isSwellWaveHtOnScene; }
+    bool swellWaveArrowsOnScene() { return areSwellWaveArrowsOnScene; }
+    bool currentArrowsOnScene() { return areCurrentArrowsOnScene; }
+    bool isobarsOnScene() { return areIsobarsOnScene; }
+
+    void setWindSpeedOnScene(bool drawn) {isWindSpeedOnScene = drawn;}
+    void setWindArrowsOnScene(bool drawn) { areWindArrowsOnScene = drawn; }
+    void setWaveSigHtOnScene(bool drawn) { isWaveSigHtOnScene = drawn; }
+    void setWindWaveHtOnScene(bool drawn) { isWindWaveHtOnScene = drawn; }
+    void setWindWaveArrowsOnScene(bool drawn) { areWindWaveArrowsOnScene = drawn; }
+    void setSwellWaveHtOnScene(bool drawn) { isSwellWaveHtOnScene = drawn; }
+    void setSwellWaveArrowsOnScene(bool drawn) { areSwellWaveArrowsOnScene = drawn; }
+    void setCurrentArrowsOnScene(bool drawn) {areCurrentArrowsOnScene = drawn; }
+    void setIsobarsOnScene(bool drawn) {areIsobarsOnScene = drawn; }
+
+    inline int getForecastPtr() const { return m_fcPtr; }
+    void updateElementsOnScene(int prevFc);
+
 
 private slots:
 
     void on_actionExit_triggered ();
     void on_actionQt_triggered ();
-    void on_actionDrawSquare_triggered ();
-    void on_actionViewPort_triggered ();
     void on_actionRenderTypes_triggered ();
     void on_actionOpen_triggered ();
     void on_actionClose_triggered ();
     void on_actionSave_triggered ();
-    void on_actionDraw_Circle_triggered ();
-//    void on_actionDownLoad_File_triggered ();
+    void on_actionDownLoad_File_triggered ();
 
     void on_actionUpload_CSV_triggered();
 
+    void on_actionInfo_Panel_triggered();
+
 private:
 
-    void addSquare();
     void createDockView (CustomScene* scene);
     void wheelEvent (QWheelEvent *event);
 
-    void    drawWindArrow (int fc);
-    void    drawWindColor (int fc);
-    void    drawWaveSigHtColor (int fc);
-    void    drawWindWaveHtColor (int fc);
-    void    drawSwellWaveHtColor (int fc);
-    void    drawWindWaveArrow (int fc);
-    void    drawSwellWaveArrow (int fc);
-    void    drawCurrentArrow (int fc);
     void    drawGrid();
+
+    void friend InfoPanel::setForecastPtr(int newPtr);
 
 
 
@@ -103,8 +111,9 @@ private:
     Ui::MainWindow *ui;
 
     RenderTypes* m_rendertypes;
+    InfoPanel* m_infoPanel;
 
-    std::vector<Square*> sq;
+//    std::vector<Square*> sq;
 
     static MainWindow* m_instance;
     Paths path;
@@ -112,40 +121,27 @@ private:
     bool is_loaded = false;
     bool is_saved = false;
 
-    std::vector<Points*>    m_wayPoints;
+//    std::vector<Points*>    m_wayPoints;
     std::vector<QLineF>     m_line;
 
     QString fileName;
     GridData* gridData;
+    CsvRoutes* routes;
+    vector<Plotter*> m_plotters;
+    int m_fcPtr;
 
     bool isGridDrawn;
 
-    bool isInitWindSpeedDrawn;
-    bool areInitWindArrowsDrawn;
-    bool isInitWaveSigHtDrawn;
-    bool isInitWindWaveHtDrawn;
-    bool areInitWindWaveArrowsDrawn;
-    bool isInitSwellWaveHtDrawn;
-    bool areInitSwellWaveArrowsDrawn;
-    bool areInitCurrentArrowsDrawn;
 
-    bool isWindSpeedDrawn;
-    bool areWindArrowsDrawn;
-    bool isWaveSigHtDrawn;
-    bool isWindWaveHtDrawn;
-    bool areWindWaveArrowsDrawn;
-    bool isSwellWaveHtDrawn;
-    bool areSwellWaveArrowsDrawn;
-    bool areCurrentArrowsDrawn;
+    bool isWindSpeedOnScene;
+    bool areWindArrowsOnScene;
+    bool isWaveSigHtOnScene;
+    bool isWindWaveHtOnScene;
+    bool areWindWaveArrowsOnScene;
+    bool isSwellWaveHtOnScene;
+    bool areSwellWaveArrowsOnScene;
+    bool areCurrentArrowsOnScene;
+    bool areIsobarsOnScene;
 
-    QVector<QGraphicsItem*> windArrowPlot;
-    QVector<QGraphicsItem*> windWaveArrowPlot;
-    QVector<QGraphicsItem*> swellWaveArrowPlot;
-    QVector<QGraphicsItem*> currentArrowPlot;
-
-    QGraphicsPixmapItem*    windColorPlot;
-    QGraphicsPixmapItem*    waveSigHtColorPlot;
-    QGraphicsPixmapItem*    windWaveHtColorPlot;
-    QGraphicsPixmapItem*    swellWaveHtColorPlot;
 
 };

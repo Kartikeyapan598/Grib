@@ -1,4 +1,4 @@
-#include "mainwindow.h"
+﻿#include "mainwindow.h"
 #include "ui_mainwindow.h"
 
 #include "Utils.h"
@@ -21,26 +21,24 @@ MainWindow::MainWindow(QWidget *parent)
 
     isGridDrawn = false;
 
-    isWindSpeedDrawn = false;
-    areWindArrowsDrawn = false;
-    isWaveSigHtDrawn = false;
-    isWindWaveHtDrawn = false;
-    areWindWaveArrowsDrawn = false;
-    isSwellWaveHtDrawn = false;
-    areSwellWaveArrowsDrawn = false;
-    areCurrentArrowsDrawn = false;
+    isWindSpeedOnScene = false;
+    areWindArrowsOnScene = false;
+    isWaveSigHtOnScene = false;
+    isWindWaveHtOnScene = false;
+    areWindWaveArrowsOnScene = false;
+    isSwellWaveHtOnScene = false;
+    areSwellWaveArrowsOnScene = false;
+    areCurrentArrowsOnScene = false;
+    areIsobarsOnScene = false;
 
-    isInitWindSpeedDrawn = false;
-    areInitWindArrowsDrawn = false;
-    isInitWaveSigHtDrawn = false;
-    isInitWindWaveHtDrawn = false;
-    areInitWindWaveArrowsDrawn = false;
-    isInitSwellWaveHtDrawn = false;
-    areInitSwellWaveArrowsDrawn = false;
-    areInitCurrentArrowsDrawn = false;
+    m_fcPtr = 0;
 
     // Select various rendering options like temp, weather, wind etc
     m_rendertypes = new RenderTypes(this);
+    m_rendertypes->setDisabled(true);
+
+    m_infoPanel = new InfoPanel(this);
+    m_infoPanel->setDisabled(true);
 
     qApp->installEventFilter(this);
 }
@@ -53,7 +51,7 @@ MainWindow::~MainWindow()
 void MainWindow::createDockView(CustomScene* scene)
 {
     m_pDockWidget2 = new QDockWidget(this);
-    m_pDockWidget2->setWindowTitle("dock type");
+    m_pDockWidget2->setWindowFlag(Qt::FramelessWindowHint);
     m_pDockWidget2->setAllowedAreas(Qt::AllDockWidgetAreas);
     m_pForm = new Form(m_pDockWidget2, scene);
     m_pForm->SetGraphicsScene();
@@ -75,35 +73,9 @@ void MainWindow::on_actionQt_triggered()
     QApplication::aboutQt();
 }
 
-void MainWindow::on_actionDrawSquare_triggered()
-{
-    // To Do Add Rendering of Squares in the viewport
-    Square* item = new Square();
-    sq.push_back(item);
-    item->setPos(randomBetween(-600, 200), randomBetween(-300, 200));
-    QGraphicsScene* scene = m_pForm->GetGraphicsScene();
-    scene->addItem(item);
-}
-
-void MainWindow::on_actionDraw_Circle_triggered()
-{
-    Points* point = new Points();
-    m_wayPoints.push_back(point);
-    point->setPos(randomBetween(-600, 200), randomBetween(-300, 200));
-    QGraphicsScene* scene = m_pForm->GetGraphicsScene();
-    scene->addItem(point);
-
-}
-
 void MainWindow::UpdateRenders()
 {
     // Update ViewPort rendering and rendering of Wind, Temp, Weather
-}
-
-void MainWindow::on_actionViewPort_triggered()
-{
-    // Hide or Show viewport on Trigger
-    m_pDockWidget2->addAction(m_pDockWidget2->toggleViewAction());
 }
 
 void MainWindow::on_actionRenderTypes_triggered()
@@ -113,6 +85,7 @@ void MainWindow::on_actionRenderTypes_triggered()
 
 void MainWindow::on_actionOpen_triggered()
 {
+    fileName = "";
     fileName = QFileDialog::getOpenFileName(this, "FileName", path.curr_dir, path.filter);
 
 /* Save old gridData to local directory
@@ -120,15 +93,36 @@ void MainWindow::on_actionOpen_triggered()
 --
 --
 */
-    gridData = new GridData(fileName.toStdString().c_str());
-    drawGrid();
-//    addWindArrowPlot(0);
-//    addWindColorPlot(0);
-//    addWaveSigHtColorPlot(0);
-    addCurrentArrowPlot(0);
+    if (fileName != "")
+    {
+        gridData = new GridData(fileName.toStdString().c_str());
 
-    is_loaded = true;
-    is_saved = true;
+        for (int fc = 0; fc < gridData->getNbForecasts(); ++fc)
+        {
+            Gridder* gridder = new Gridder(fc);
+            Plotter* plotter = new Plotter(gridder);
+            m_plotters.push_back(plotter);
+            m_plotters.back()->setScene(m_pForm->GetGraphicsScene());
+        }
+
+        drawGrid();
+
+        m_infoPanel->setRefDate(gridData->getRefDate());
+
+        m_plotters.front()->addWindColorPlot();
+        isWindSpeedOnScene = true;
+
+        m_plotters.front()->addWindArrowPlot();
+        areWindArrowsOnScene = true;
+
+        m_rendertypes->setDisabled(false);
+        m_infoPanel->show();
+        m_infoPanel->setDisabled(false);
+
+
+        is_loaded = true;
+        is_saved = true;
+    }
 }
 
 
@@ -151,16 +145,17 @@ void MainWindow::on_actionSave_triggered()
     }
 }
 
-//void MainWindow::on_actionDownLoad_File_triggered()
-//{
-//    //Crashing Why?
-//    //m_dataManager->append(QStringList("https://www.win-rar.com/fileadmin/winrar-versions/winrar/winrar-x64-611.exe"));
-//    DownloadManager* manager = new DownloadManager(NULL);
-//    QStringList list;
-//    list.append(QString("https://speed.hetzner.de/100MB.bin"));
-//    manager->append(list);
-//    return;
-//}
+
+void MainWindow::on_actionDownLoad_File_triggered()
+{
+    //Crashing Why?
+    //m_dataManager->append(QStringList("https://www.win-rar.com/fileadmin/winrar-versions/winrar/winrar-x64-611.exe"));
+    DownloadManager* manager = new DownloadManager(NULL);
+    QStringList list;
+    list.append(QString("https://speed.hetzner.de/100MB.bin"));
+    manager->append(list);
+    return;
+}
 
 
 void MainWindow::on_actionUpload_CSV_triggered()
@@ -169,7 +164,9 @@ void MainWindow::on_actionUpload_CSV_triggered()
     QString fName = QFileDialog::getOpenFileName(this, "FileName", path.curr_dir, path.filter);
 
     // Initialize route
+    routes = new CsvRoutes(fName);
 
+    addCsvRoutePlot();
 
     /* Upload to back-end
      *
@@ -179,272 +176,71 @@ void MainWindow::on_actionUpload_CSV_triggered()
      */
 }
 
-void MainWindow::addWindArrowPlot(int fc)
+
+
+void MainWindow::addCsvRoutePlot()
 {
     CustomScene* scene = m_pForm->GetGraphicsScene();
 
-    if (!areInitWindArrowsDrawn)
+    float stepi = scene->stepI();
+    float stepj = scene->stepJ();
+
+    std::vector<std::pair<float, float>> route = routes->getOrigCsvRoute();
+
+    QPen wp_border = QPen(Qt::red, 3);
+    wp_border.setCosmetic(true);
+
+    QPen wp_line = QPen(Qt::darkRed, 3);
+    wp_line.setCosmetic(true);
+    wp_line.setCapStyle(Qt::RoundCap);
+
+    QPointF prev = QPointF(route.at(0).first, route.at(0).second);
+
+    for (size_t i = 0; i < route.size(); i++)
     {
-        drawWindArrow(fc);
-        areWindArrowsDrawn = true;
-    }
-    else if (!areWindArrowsDrawn)
-    {
-        for (auto it : windArrowPlot) {
-            scene->addItem(it);
+        float x = route.at(i).first * stepi;
+        float y = -toMerc(route.at(i).second) * stepj;
+
+        // waypoint
+        double rad = 0.3;
+        QGraphicsEllipseItem* el = scene->addEllipse(x - rad, y - rad, rad*2.0, rad*2.0, wp_border, QBrush(Qt::SolidPattern));
+        el->setZValue(std::numeric_limits<qreal>::max() - 2);                       // below label
+
+
+        // line
+
+        if (i > 0)
+        {
+            float prev_x = prev.x() * stepi;
+            float prev_y = -toMerc(prev.y()) * stepj;
+
+            QGraphicsLineItem* l = scene->addLine(prev_x, prev_y, x, y, wp_line);
+            l->setZValue(std::numeric_limits<qreal>::max() - 1);
+
+            prev = QPointF(route.at(i).first, route.at(i).second);
         }
-        areWindArrowsDrawn = true;
-    }
 
-}
 
-void MainWindow::addWindColorPlot(int fc)
-{
-    CustomScene* scene = m_pForm->GetGraphicsScene();
+        // waypoint number
 
-    if (!isInitWindSpeedDrawn)
-    {
-        drawWindColor(fc);
-        isWindSpeedDrawn = true;
-    }
-    else if (!isWindSpeedDrawn)
-    {
-        int mapXmax = scene->xExtent();
-        int mapYmax = scene->yExtent();
+        QGraphicsTextItem* label = new QGraphicsTextItem(QString::number(i + 1));
+        label->setDefaultTextColor(Qt::white);
 
-        windColorPlot->setOffset(-mapXmax, -mapYmax);
-        windColorPlot->setPos(0, 0);
-        windColorPlot->setZValue(-1);
-        scene -> addItem(windColorPlot);
-        isWindSpeedDrawn = true;
-    }
+        QFont f = label->font();
+        f.setPointSizeF(0.4);
+        label->setFont(f);
 
-}
+        QRectF textRect = label->boundingRect();
 
-void MainWindow::addWaveSigHtColorPlot(int fc)
-{
-    CustomScene* scene = m_pForm->GetGraphicsScene();
-
-    if (!isInitWaveSigHtDrawn)
-    {
-        drawWaveSigHtColor(fc);
-        isWaveSigHtDrawn = true;
-    }
-    else if (!isWaveSigHtDrawn)
-    {
-        int mapXmax = scene->xExtent();
-        int mapYmax = scene->yExtent();
-
-        waveSigHtColorPlot->setOffset(-mapXmax, -mapYmax);
-        waveSigHtColorPlot->setPos(0, 0);
-        waveSigHtColorPlot->setZValue(-1);
-        scene -> addItem(waveSigHtColorPlot);
-        isWaveSigHtDrawn = true;
-    }
-
-}
-
-void MainWindow::addWindWaveHtColorPlot(int fc)
-{
-    CustomScene* scene = m_pForm->GetGraphicsScene();
-
-    if (!isInitWindWaveHtDrawn)
-    {
-        drawWindWaveHtColor(fc);
-        isWindWaveHtDrawn = true;
-    }
-    else if (!isWindWaveHtDrawn)
-    {
-        int mapXmax = scene->xExtent();
-        int mapYmax = scene->yExtent();
-
-        windWaveHtColorPlot->setOffset(-mapXmax, -mapYmax);
-        windWaveHtColorPlot->setPos(0, 0);
-        windWaveHtColorPlot->setZValue(-1);
-        scene -> addItem(windWaveHtColorPlot);
-        isWindWaveHtDrawn = true;
-    }
-
-}
-void MainWindow::addWindWaveArrowPlot(int fc)
-{
-    CustomScene* scene = m_pForm->GetGraphicsScene();
-
-    if (!areInitWindWaveArrowsDrawn)
-    {
-        drawWindWaveArrow(fc);
-        areWindWaveArrowsDrawn = true;
-    }
-    else if (!areWindWaveArrowsDrawn)
-    {
-        for (auto it : windWaveArrowPlot) {
-            scene->addItem(it);
+        if (i % 2 == 0) {
+            label->setPos(x - 5 * textRect.width() / 8, y - textRect.height() / 2);
         }
-        areWindWaveArrowsDrawn = true;
-    }
-
-}
-
-void MainWindow::addSwellWaveHtColorPlot(int fc)
-{
-    CustomScene* scene = m_pForm->GetGraphicsScene();
-
-    if (!isInitSwellWaveHtDrawn)
-    {
-        drawSwellWaveHtColor(fc);
-        isSwellWaveHtDrawn = true;
-    }
-    else if (!isSwellWaveHtDrawn)
-    {
-        int mapXmax = scene->xExtent();
-        int mapYmax = scene->yExtent();
-
-        swellWaveHtColorPlot->setOffset(-mapXmax, -mapYmax);
-        swellWaveHtColorPlot->setPos(0, 0);
-        swellWaveHtColorPlot->setZValue(-1);
-        scene -> addItem(swellWaveHtColorPlot);
-        isSwellWaveHtDrawn = true;
-    }
-
-}
-void MainWindow::addSwellWaveArrowPlot(int fc)
-{
-    CustomScene* scene = m_pForm->GetGraphicsScene();
-
-    if (!areInitSwellWaveArrowsDrawn)
-    {
-        drawSwellWaveArrow(fc);
-        areSwellWaveArrowsDrawn = true;
-    }
-    else if (!areSwellWaveArrowsDrawn)
-    {
-        for (auto it : swellWaveArrowPlot) {
-            scene->addItem(it);
+        else {
+            label->setPos(x - 3 * textRect.width() / 8, y - textRect.height() / 2);
         }
-        areSwellWaveArrowsDrawn = true;
-    }
 
-}
-
-void MainWindow::addCurrentArrowPlot(int fc)
-{
-    CustomScene* scene = m_pForm->GetGraphicsScene();
-
-    if (!areInitCurrentArrowsDrawn)
-    {
-        drawCurrentArrow(fc);
-        areCurrentArrowsDrawn = true;
-    }
-    else if (!areCurrentArrowsDrawn)
-    {
-        for (auto it : currentArrowPlot) {
-            scene->addItem(it);
-        }
-        areCurrentArrowsDrawn = true;
-    }
-}
-
-
-void MainWindow::removeWindArrowPlot(int fc)
-{
-    CustomScene* scene = m_pForm->GetGraphicsScene();
-
-    if (areWindArrowsDrawn)
-    {
-        for (auto it : windArrowPlot) {
-            scene->removeItem(it);
-        }
-        areWindArrowsDrawn = false;
-    }
-
-}
-
-void MainWindow::removeWindColorPlot(int fc)
-{
-    CustomScene* scene = m_pForm->GetGraphicsScene();
-
-    if (isWindSpeedDrawn)
-    {
-        scene->removeItem(windColorPlot);
-        isWindSpeedDrawn = false;
-    }
-
-}
-
-void MainWindow::removeWaveSigHtColorPlot(int fc)
-{
-    CustomScene* scene = m_pForm->GetGraphicsScene();
-
-    if (isWaveSigHtDrawn)
-    {
-        scene->removeItem(waveSigHtColorPlot);
-        isWaveSigHtDrawn = false;
-    }
-
-}
-
-void MainWindow::removeWindWaveHtColorPlot(int fc)
-{
-    CustomScene* scene = m_pForm->GetGraphicsScene();
-
-    if (isWindWaveHtDrawn)
-    {
-        scene->removeItem(windWaveHtColorPlot);
-        isWindWaveHtDrawn = false;
-    }
-
-}
-
-void MainWindow::removeSwellWaveHtColorPlot(int fc)
-{
-    CustomScene* scene = m_pForm->GetGraphicsScene();
-
-    if (isSwellWaveHtDrawn)
-    {
-        scene->removeItem(swellWaveHtColorPlot);
-        isSwellWaveHtDrawn = false;
-    }
-
-}
-
-void MainWindow::removeWindWaveArrowPlot(int fc)
-{
-    CustomScene* scene = m_pForm->GetGraphicsScene();
-
-    if (areWindWaveArrowsDrawn)
-    {
-        for (auto it : windWaveArrowPlot) {
-            scene->removeItem(it);
-        }
-        areWindWaveArrowsDrawn = false;
-    }
-
-}
-
-void MainWindow::removeSwellWaveArrowPlot(int fc)
-{
-    CustomScene* scene = m_pForm->GetGraphicsScene();
-
-    if (areSwellWaveArrowsDrawn)
-    {
-        for (auto it : swellWaveArrowPlot) {
-            scene->removeItem(it);
-        }
-        areSwellWaveArrowsDrawn = false;
-    }
-
-}
-
-void MainWindow::removeCurrentArrowPlot(int fc)
-{
-    CustomScene* scene = m_pForm->GetGraphicsScene();
-
-    if (areCurrentArrowsDrawn)
-    {
-        for (auto it : currentArrowPlot) {
-            scene->removeItem(it);
-        }
-        areCurrentArrowsDrawn = false;
+        label->setZValue(std::numeric_limits<qreal>::max());                    // above waypoint
+        scene->addItem(label);
     }
 }
 
@@ -510,1776 +306,74 @@ void MainWindow::drawGrid()
                 }
             }
         }
+        else
+        {
+            qInfo() << "Application not configured for resolution < 1";
+            return;
+        }
         isGridDrawn = true;
     }
 }
 
-void MainWindow::drawWindArrow(int fc)
+void MainWindow::updateElementsOnScene(int prevFc) // for updated m_fcPtr
 {
-    CustomScene* scene = m_pForm->GetGraphicsScene();
-    vector<vector<double>> wSpeed = gridData->getWindSpeed(fc);
-    vector<vector<int>> wDir = gridData->getWindDir(fc);
-
-    if (wSpeed.size() == 0 || wDir.size() == 0) {
-        return;
-    }
-
-    double Di = gridData->getD();
-    double Dj = gridData->getD();
-    int xMin = gridData->getMinPoint().x();
-    int yMin = gridData->getMinPoint().y();
-    int xMax = gridData->getMaxPoint().x();
-    int yMax = gridData->getMaxPoint().y();
-    int Ni = gridData->getNi();
-    int Nj = gridData->getNj();
-
-    double stepi = scene->stepI();
-    double stepj = scene->stepJ();
-
-    // arrow properties
-    double arrowSize = stepj;
-
-    QPen pen = QPen(Qt::black, 0.2);
-
-    if (xMin < xMax)
+    if (isWindSpeedOnScene)
     {
-        int j = 0;
-        for (int y = yMin; y <= yMax && j < Nj; y += Dj)
-        {
-            int i = 0;
-            for (int x = xMin; x <= xMax && i < Ni; x += Di)
-            {
-                double vInKnots = 1.94384 * (wSpeed[i][j]);
-                double ang = (wDir[i][j]) * M_PI / 180.0;  // ang of arrow with +ve x axis in scene's ref
-                double dx = arrowSize * qCos(ang);                // proj of arrow on x axis (in scene's ref)
-                double dy = arrowSize * qSin(ang);                // proj of arrow on y axis (in scene's ref)
-                double xx = x * stepi;                            // starting coordinates of the arrow
-                double yy = -toMerc(y) * stepj;
-
-                // barbs
-                int vApprox = (int)(std::floor(vInKnots));
-
-                if (vApprox == 0)
-                {
-                    double rads = 1;
-                    QGraphicsItem* windItem = scene -> addEllipse(xx - rads, yy - rads, rads*2.0, rads*2.0, pen);
-                    windArrowPlot.push_back(windItem);
-
-                    double rad = 2;
-                    windItem = scene -> addEllipse(xx - rad, yy - rad, rad*2.0, rad*2.0, pen);
-                    windArrowPlot.push_back(windItem);
-                }
-                else if (vApprox < 50)
-                {
-                    QGraphicsItem* windItem = scene -> addLine(xx, yy, xx + dx, yy + dy, pen);
-                    windArrowPlot.push_back(windItem);
-
-                    double d = arrowSize/6;
-                    double bx = xx;
-                    double by = yy;
-                    int noOfSmallBarbs = (vApprox < 5) ? 1 : (vApprox/5) % 2;
-                    int noOfBigBarbs = vApprox/10;
-
-                    if (noOfBigBarbs == 0)
-                    {
-                        bx += d*qCos(ang);
-                        by += d*qSin(ang);
-                    }
-
-                    for (int i = 0; i < noOfBigBarbs; i++)
-                    {
-                        QPointF be = barb(ang, arrowSize);
-
-                        windItem = scene -> addLine(bx, by, bx + be.x(), by + be.y(), pen);
-                        windArrowPlot.push_back(windItem);
-
-                        bx += d*qCos(ang);
-                        by += d*qSin(ang);
-                    }
-
-                    for (int i = 0; i < noOfSmallBarbs; i++)
-                    {
-                        QPointF be = barb(ang, arrowSize, true);
-
-                        windItem = scene -> addLine(bx, by, bx + be.x(), by + be.y(), pen);
-                        windArrowPlot.push_back(windItem);
-                    }
-                }
-                else
-                {
-                    QGraphicsItem* windItem = scene -> addLine(xx, yy, xx + dx, yy + dy, pen);
-                    windArrowPlot.push_back(windItem);
-
-                    double d = arrowSize/6;
-                    double bx = xx;
-                    double by = yy;
-                    int noOfSmallBarbs = (vApprox/5) % 2;
-                    int noOfBigBarbs = (vApprox/10) % 5;
-                    int noOfTriangles = vApprox/50;
-
-                    for (int i = 0; i < noOfTriangles; i++)
-                    {
-                        QPair<QPointF, QPointF> p = triangle(ang, arrowSize);
-
-                        windItem = scene->addLine(bx, by, bx + p.first.x(), by + p.first.y(), pen);
-                        windArrowPlot.push_back(windItem);
-
-                        windItem = scene->addLine(bx + p.second.x(), by + p.second.y(), bx + p.first.x(), by + p.first.y(), pen);
-                        windArrowPlot.push_back(windItem);
-
-                        bx = p.second.x();
-                        by = p.second.y();
-                    }
-
-                    bx += d*qCos(ang);
-                    by += d*qSin(ang);
-
-                    for (int i = 0; i < noOfBigBarbs; i++)
-                    {
-                        QPointF be = barb(ang, arrowSize);
-
-                        windItem = scene -> addLine(bx, by, bx + be.x(), by + be.y(), pen);
-                        windArrowPlot.push_back(windItem);
-
-                        bx += d*qCos(ang);
-                        by += d*qSin(ang);
-                    }
-
-                    for (int i = 0; i < noOfSmallBarbs; i++)
-                    {
-                        QPointF be = barb(ang, arrowSize, true);
-
-                        windItem = scene -> addLine(bx, by, bx + be.x(), by + be.y(), pen);
-                        windArrowPlot.push_back(windItem);
-                    }
-                }
-                i++;
-            }
-            j++;
-        }
+        m_plotters.at(prevFc)->removeWindColorPlot();
+        m_plotters.at(m_fcPtr)->addWindColorPlot();
     }
 
-    else
+    if (areWindArrowsOnScene)
     {
-        int j = 0;
-        for (int y = yMin; y <= yMax && j < Nj; y+=Dj)
-        {
-            int i = 0;
-            int skipped = 0;
-            for (int x = xMin; x <= 180; x+=Di)
-            {
-                double vInKnots = 1.94384 * (wSpeed[i][j]);
-                double ang = (wDir[i][j]) * M_PI / 180.0;   // angle of arrow with +ve x axis in scene's ref
-                double dx = arrowSize*qCos(ang);         // projection of length of arrow on x - axis (in scene's ref)
-                double dy = arrowSize*qSin(ang);         // projection of length of arrow on y - axis      ,,
-                double xx = x*stepi;   // starting coordinates of the arrow
-                double yy = -toMerc(y)*stepj;
-
-                // barbs
-                int vApprox = (int)(std::floor(vInKnots));
-
-                if (vApprox == 0)
-                {
-                    double rads = 1;
-                    QGraphicsItem* windItem = scene -> addEllipse(xx - rads, yy - rads, rads*2.0, rads*2.0, pen);
-                    windArrowPlot.push_back(windItem);
-
-                    double rad = 2;
-                    windItem = scene -> addEllipse(xx - rad, yy - rad, rad*2.0, rad*2.0, pen);
-                    windArrowPlot.push_back(windItem);
-                }
-                else if (vApprox < 50)
-                {
-                    QGraphicsItem* windItem = scene -> addLine(xx, yy, xx + dx, yy + dy, pen);
-                    windArrowPlot.push_back(windItem);
-
-                    double d = arrowSize/6;
-                    double bx = xx;
-                    double by = yy;
-                    int noOfSmallBarbs = (vApprox < 5) ? 1 : (vApprox/5) % 2;
-                    int noOfBigBarbs = vApprox/10;
-
-                    if (noOfBigBarbs == 0)
-                    {
-                        bx += d*qCos(ang);
-                        by += d*qSin(ang);
-                    }
-
-                    for (int i = 0; i < noOfBigBarbs; i++)
-                    {
-                        QPointF be = barb(ang, arrowSize);
-
-                        windItem = scene -> addLine(bx, by, bx + be.x(), by + be.y(), pen);
-                        windArrowPlot.push_back(windItem);
-
-                        bx += d*qCos(ang);
-                        by += d*qSin(ang);
-                    }
-
-                    for (int i = 0; i < noOfSmallBarbs; i++)
-                    {
-                        QPointF be = barb(ang, arrowSize, true);
-
-                        windItem = scene -> addLine(bx, by, bx + be.x(), by + be.y(), pen);
-                        windArrowPlot.push_back(windItem);
-                    }
-                }
-                else
-                {
-                    QGraphicsItem* windItem = scene -> addLine(xx, yy, xx + dx, yy + dy, pen);
-                    windArrowPlot.push_back(windItem);
-
-                    double d = arrowSize/6;
-                    double bx = xx;
-                    double by = yy;
-                    int noOfSmallBarbs = (vApprox/5) % 2;
-                    int noOfBigBarbs = (vApprox/10) % 5;
-                    int noOfTriangles = vApprox/50;
-
-                    for (int i = 0; i < noOfTriangles; i++)
-                    {
-                        QPair<QPointF, QPointF> p = triangle(ang, arrowSize);
-
-                        windItem = scene->addLine(bx, by, bx + p.first.x(), by + p.first.y(), pen);
-                        windArrowPlot.push_back(windItem);
-
-                        windItem = scene->addLine(bx + p.second.x(), by + p.second.y(), bx + p.first.x(), by + p.first.y(), pen);
-                        windArrowPlot.push_back(windItem);
-
-                        bx = p.second.x();
-                        by = p.second.y();
-                    }
-
-                    bx += d*qCos(ang);
-                    by += d*qSin(ang);
-
-                    for (int i = 0; i < noOfBigBarbs; i++)
-                    {
-                        QPointF be = barb(ang, arrowSize);
-
-                        windItem = scene -> addLine(bx, by, bx + be.x(), by + be.y(), pen);
-                        windArrowPlot.push_back(windItem);
-
-                        bx += d*qCos(ang);
-                        by += d*qSin(ang);
-                    }
-
-                    for (int i = 0; i < noOfSmallBarbs; i++)
-                    {
-                        QPointF be = barb(ang, arrowSize, true);
-
-                        windItem = scene -> addLine(bx, by, bx + be.x(), by + be.y(), pen);
-                        windArrowPlot.push_back(windItem);
-                    }
-                }
-                i++;
-                if (x + Di > 180) {
-                    skipped = 180 - x;
-                }
-            }
-
-            int skip = Di - 1 - skipped;
-
-            for (int x = -179 + skip; x <= xMax && i < Ni; x += Di)
-            {
-                double vInKnots = 1.94384 * (wSpeed[i][j]);
-                double ang = (wDir[i][j]) * M_PI / 180.0;  // angle of arrow with +ve x axis in scene's ref
-                double dx = arrowSize*qCos(ang);         // projection of length of arrow on x - axis (in scene's ref)
-                double dy = arrowSize*qSin(ang);         // projection of length of arrow on y - axis      ,,
-                double xx = x*stepi;   // starting coordinates of the arrow
-                double yy = -toMerc(y)*stepj;
-
-                // barbs
-                int vApprox = (int)(std::floor(vInKnots));
-
-                if (vApprox == 0)
-                {
-                    double rads = 1;
-                    QGraphicsItem* windItem = scene -> addEllipse(xx - rads, yy - rads, rads*2.0, rads*2.0, pen);
-                    windArrowPlot.push_back(windItem);
-
-                    double rad = 2;
-                    windItem = scene -> addEllipse(xx - rad, yy - rad, rad*2.0, rad*2.0, pen);
-                    windArrowPlot.push_back(windItem);
-                }
-                else if (vApprox < 50)
-                {
-                    QGraphicsItem* windItem = scene -> addLine(xx, yy, xx + dx, yy + dy, pen);
-                    windArrowPlot.push_back(windItem);
-
-                    double d = arrowSize/6;
-                    double bx = xx;
-                    double by = yy;
-                    int noOfSmallBarbs = (vApprox < 5) ? 1 : (vApprox/5) % 2;
-                    int noOfBigBarbs = vApprox/10;
-
-                    if (noOfBigBarbs == 0)
-                    {
-                        bx += d*qCos(ang);
-                        by += d*qSin(ang);
-                    }
-
-                    for (int i = 0; i < noOfBigBarbs; i++)
-                    {
-                        QPointF be = barb(ang, arrowSize);
-
-                        windItem = scene -> addLine(bx, by, bx + be.x(), by + be.y(), pen);
-                        windArrowPlot.push_back(windItem);
-
-                        bx += d*qCos(ang);
-                        by += d*qSin(ang);
-                    }
-
-                    for (int i = 0; i < noOfSmallBarbs; i++)
-                    {
-                        QPointF be = barb(ang, arrowSize, true);
-
-                        windItem = scene -> addLine(bx, by, bx + be.x(), by + be.y(), pen);
-                        windArrowPlot.push_back(windItem);
-                    }
-                }
-                else
-                {
-                    QGraphicsItem* windItem = scene -> addLine(xx, yy, xx + dx, yy + dy, pen);
-                    windArrowPlot.push_back(windItem);
-
-                    double d = arrowSize/6;
-                    double bx = xx;
-                    double by = yy;
-                    int noOfSmallBarbs = (vApprox/5) % 2;
-                    int noOfBigBarbs = (vApprox/10) % 5;
-                    int noOfTriangles = vApprox/50;
-
-                    for (int i = 0; i < noOfTriangles; i++)
-                    {
-                        QPair<QPointF, QPointF> p = triangle(ang, arrowSize);
-
-                        windItem = scene->addLine(bx, by, bx + p.first.x(), by + p.first.y(), pen);
-                        windArrowPlot.push_back(windItem);
-
-                        windItem = scene->addLine(bx + p.second.x(), by + p.second.y(), bx + p.first.x(), by + p.first.y(), pen);
-                        windArrowPlot.push_back(windItem);
-
-                        bx = p.second.x();
-                        by = p.second.y();
-                    }
-
-                    bx += d*qCos(ang);
-                    by += d*qSin(ang);
-
-                    for (int i = 0; i < noOfBigBarbs; i++)
-                    {
-                        QPointF be = barb(ang, arrowSize);
-
-                        windItem = scene -> addLine(bx, by, bx + be.x(), by + be.y(), pen);
-                        windArrowPlot.push_back(windItem);
-
-                        bx += d*qCos(ang);
-                        by += d*qSin(ang);
-                    }
-
-                    for (int i = 0; i < noOfSmallBarbs; i++)
-                    {
-                        QPointF be = barb(ang, arrowSize, true);
-
-                        windItem = scene -> addLine(bx, by, bx + be.x(), by + be.y(), pen);
-                        windArrowPlot.push_back(windItem);
-                    }
-                }
-                i++;
-            }
-            j++;
-        }
+        m_plotters.at(prevFc)->removeWindArrowPlot();
+        m_plotters.at(m_fcPtr)->addWindArrowPlot();
     }
-    areInitWindArrowsDrawn = true;
+
+    if (isWaveSigHtOnScene)
+    {
+        m_plotters.at(prevFc)->removeWaveSigHtColorPlot();
+        m_plotters.at(m_fcPtr)->addWaveSigHtColorPlot();
+    }
+
+    if (areWindWaveArrowsOnScene)
+    {
+        m_plotters.at(prevFc)->removeWindWaveArrowPlot();
+        m_plotters.at(m_fcPtr)->addWindWaveArrowPlot();
+    }
+
+    if (isWindWaveHtOnScene)
+    {
+        m_plotters.at(prevFc)->removeWindWaveHtColorPlot();
+        m_plotters.at(m_fcPtr)->addWindWaveHtColorPlot();
+    }
+
+    if (isSwellWaveHtOnScene)
+    {
+        m_plotters.at(prevFc)->removeSwellWaveHtColorPlot();
+        m_plotters.at(m_fcPtr)->addSwellWaveHtColorPlot();
+    }
+
+    if (areSwellWaveArrowsOnScene)
+    {
+        m_plotters.at(prevFc)->removeSwellWaveArrowPlot();
+        m_plotters.at(m_fcPtr)->addSwellWaveArrowPlot();
+    }
+
+    if (areCurrentArrowsOnScene)
+    {
+        m_plotters.at(prevFc)->removeCurrentArrowPlot();
+        m_plotters.at(m_fcPtr)->addCurrentArrowPlot();
+    }
+
+    if (areIsobarsOnScene)
+    {
+        m_plotters.at(prevFc)->removeIsobarPlot();
+        m_plotters.at(m_fcPtr)->addIsobarPlot();
+    }
 }
 
-
-void MainWindow::drawWindColor (int fc)
+void MainWindow::on_actionInfo_Panel_triggered()
 {
-    vector<vector<double>> wSpeed = gridData->getWindSpeed(fc);
-
-    if (wSpeed.size() == 0) {
-        return;
-    }
-
-    double Di = gridData->getD();
-    double Dj = gridData->getD();
-    int xMin = gridData->getMinPoint().x();
-    int yMin = gridData->getMinPoint().y();
-    int xMax = gridData->getMaxPoint().x();
-    int yMax = gridData->getMaxPoint().y();
-    int Ni = gridData->getNi();
-    int Nj = gridData->getNj();
-
-    CustomScene* scene = m_pForm->GetGraphicsScene();
-    double stepi = scene->stepI();
-    double stepj = scene->stepJ();
-
-    int mapXmax = scene->xExtent();
-    int mapYmax = scene->yExtent();
-
-    std::unordered_map<int, QColor> m = scene->GetWindColourScale();  // wind colour scale
-
-
-
-    QVector<QVector<QColor>> cXY(Ni, QVector<QColor>(Nj, QColor(0,0,0))); // colour at every grid point
-
-    for (int j = 0; j < Nj; j++)
-    {
-        for (int i = 0; i < Ni; i++)
-        {
-            double vInKnots = 1.94384 * (wSpeed[i][j]);
-            int vc = (int)(qRound(vInKnots));
-            cXY[i][j] = m[vc];
-        }
-    }
-
-    QImage *colourLayer = new QImage (2*mapXmax, 2*mapYmax, QImage::Format_ARGB32);
-
-    if (xMin < xMax)
-    {
-        int j = 0;
-        for (int y = yMin; y <= yMax && j < Nj - 1; y += Dj)
-        {
-            int i = 0;
-            float y_merc1 = toMerc(y)*stepj;
-            float y_merc2 = toMerc(y + Di)*stepj;
-
-            for (int x = xMin; x <= xMax && i < Ni - 1; x += Di)
-            {
-                // Grid -
-                // p3   p4
-                //
-                // p1   p2
-
-                double x1 = x*stepi, y1 = -y_merc1;
-                double x2 = (x + Di)*stepi, y2 = -y_merc2;
-                QPoint p1(x1, y1);
-                QPoint p2(x2, y1);
-                QPoint p3(x1, y2);
-                QPoint p4(x2, y2);
-
-                // respective colour at p1, p2, p3, p4
-                int r1 = cXY[i][j].red(),      g1 = cXY[i][j].green(),         b1 = cXY[i][j].blue(),
-                r2 = cXY[i + 1][j].red(),      g2 = cXY[i + 1][j].green(),     b2 = cXY[i + 1][j].blue(),
-                r3 = cXY[i][j + 1].red(),      g3 = cXY[i][j + 1].green(),     b3 = cXY[i][j + 1].blue(),
-                r4 = cXY[i + 1][j + 1].red(),  g4 = cXY[i + 1][j + 1].green(), b4 = cXY[i + 1][j + 1].blue();
-
-                // applying bilinear filtering in the given grid
-                for (int yy = p1.y(); yy > p3.y(); yy--) {
-                    for (int xx = p1.x(); xx < p2.x(); xx++) {
-                        int r_F = (r1 + ((r2 - r1)/(p2.x()-p1.x()))*(xx-p1.x()));
-                        int g_F = (g1 + ((g2 - g1)/(p2.x()-p1.x()))*(xx-p1.x()));
-                        int b_F = (b1 + ((b2 - b1)/(p2.x()-p1.x()))*(xx-p1.x()));
-                        int r_H = (r3 + ((r4 - r3)/(p2.x()-p1.x()))*(xx-p1.x()));
-                        int g_H = (g3 + ((g4 - g3)/(p2.x()-p1.x()))*(xx-p1.x()));
-                        int b_H = (b3 + ((b4 - b3)/(p2.x()-p1.x()))*(xx-p1.x()));
-
-                        // colour at general (x, y) in grid
-                        int r_G = (r_F + ((r_H - r_F)/(p1.y()-p3.y()))*(p1.y() - yy)) + 0.5;
-                        int g_G = (g_F + ((g_H - g_F)/(p1.y()-p3.y()))*(p1.y() - yy)) + 0.5;
-                        int b_G = (b_F + ((b_H - b_F)/(p1.y()-p3.y()))*(p1.y() - yy)) + 0.5;
-                        QPoint imgCen = QPoint(mapXmax, mapYmax);
-                        QColor col = QColor(r_G, g_G, b_G);
-                        colourLayer->setPixel(imgCen.x() + xx, imgCen.y() + yy, col.rgb());
-                    }
-                }
-                i++;
-            }
-            j++;
-        }
-    }
-
-    else
-    {
-        int j = 0;
-        for (int y = yMin; y <= yMax && j < Nj - 1; y += Dj)
-        {
-            int i = 0;
-            float y_merc1 = toMerc(y)*stepj;
-            float y_merc2 = toMerc(y + Di)*stepj;
-
-            int skipped = 0;
-
-            for (int x = xMin; x <= 180 && i < Ni - 1; x += Di)
-            {
-                // Grid -
-                // p3   p4
-                //
-                // p1   p2
-
-                double x1 = x*stepi, y1 = -y_merc1;
-                double x2 = (x + Di)*stepi, y2 = -y_merc2;
-                QPoint p1(x1, y1);
-                QPoint p2(x2, y1);
-                QPoint p3(x1, y2);
-                QPoint p4(x2, y2);
-
-                // respective colour at p1, p2, p3, p4
-                int r1 = cXY[i][j].red(),      g1 = cXY[i][j].green(),         b1 = cXY[i][j].blue(),
-                r2 = cXY[i + 1][j].red(),      g2 = cXY[i + 1][j].green(),     b2 = cXY[i + 1][j].blue(),
-                r3 = cXY[i][j + 1].red(),      g3 = cXY[i][j + 1].green(),     b3 = cXY[i][j + 1].blue(),
-                r4 = cXY[i + 1][j + 1].red(),  g4 = cXY[i + 1][j + 1].green(), b4 = cXY[i + 1][j + 1].blue();
-
-                // applying bilinear filtering in the given grid
-                for (int yy = p1.y(); yy > p3.y(); yy--) {
-                    for (int xx = p1.x(); xx < p2.x(); xx++) {
-                        int r_F = (r1 + ((r2 - r1)/(p2.x()-p1.x()))*(xx-p1.x()));
-                        int g_F = (g1 + ((g2 - g1)/(p2.x()-p1.x()))*(xx-p1.x()));
-                        int b_F = (b1 + ((b2 - b1)/(p2.x()-p1.x()))*(xx-p1.x()));
-                        int r_H = (r3 + ((r4 - r3)/(p2.x()-p1.x()))*(xx-p1.x()));
-                        int g_H = (g3 + ((g4 - g3)/(p2.x()-p1.x()))*(xx-p1.x()));
-                        int b_H = (b3 + ((b4 - b3)/(p2.x()-p1.x()))*(xx-p1.x()));
-
-                        // colour at general (x, y) in grid
-                        int r_G = (r_F + ((r_H - r_F)/(p1.y()-p3.y()))*(p1.y() - yy)) + 0.5;
-                        int g_G = (g_F + ((g_H - g_F)/(p1.y()-p3.y()))*(p1.y() - yy)) + 0.5;
-                        int b_G = (b_F + ((b_H - b_F)/(p1.y()-p3.y()))*(p1.y() - yy)) + 0.5;
-                        QPoint imgCen = QPoint(mapXmax, mapYmax);
-                        QColor col = QColor(r_G, g_G, b_G);
-                        colourLayer->setPixel(imgCen.x() + xx, imgCen.y() + yy, col.rgb());
-                    }
-                }
-                i++;
-                if (x + Di > 180) {
-                    skipped = 180 - x;
-                }
-            }
-
-            int skip = skipped;
-
-            for (int x = -179 + skip; x <= xMax && i < Ni - 1; x += Di)
-            {
-                // Grid -
-                // p3   p4
-                //
-                // p1   p2
-
-                double x1 = x*stepi, y1 = -y_merc1;
-                double x2 = (x + Di)*stepi, y2 = -y_merc2;
-                QPoint p1(x1, y1);
-                QPoint p2(x2, y1);
-                QPoint p3(x1, y2);
-                QPoint p4(x2, y2);
-
-                // respective colour at p1, p2, p3, p4
-                int r1 = cXY[i][j].red(),      g1 = cXY[i][j].green(),         b1 = cXY[i][j].blue(),
-                r2 = cXY[i + 1][j].red(),      g2 = cXY[i + 1][j].green(),     b2 = cXY[i + 1][j].blue(),
-                r3 = cXY[i][j + 1].red(),      g3 = cXY[i][j + 1].green(),     b3 = cXY[i][j + 1].blue(),
-                r4 = cXY[i + 1][j + 1].red(),  g4 = cXY[i + 1][j + 1].green(), b4 = cXY[i + 1][j + 1].blue();
-
-                // applying bilinear filtering in the given grid
-                for (int yy = p1.y(); yy > p3.y(); yy--) {
-                    for (int xx = p1.x(); xx < p2.x(); xx++) {
-                        int r_F = (r1 + ((r2 - r1)/(p2.x()-p1.x()))*(xx-p1.x()));
-                        int g_F = (g1 + ((g2 - g1)/(p2.x()-p1.x()))*(xx-p1.x()));
-                        int b_F = (b1 + ((b2 - b1)/(p2.x()-p1.x()))*(xx-p1.x()));
-                        int r_H = (r3 + ((r4 - r3)/(p2.x()-p1.x()))*(xx-p1.x()));
-                        int g_H = (g3 + ((g4 - g3)/(p2.x()-p1.x()))*(xx-p1.x()));
-                        int b_H = (b3 + ((b4 - b3)/(p2.x()-p1.x()))*(xx-p1.x()));
-
-                        // colour at general (x, y) in grid
-                        int r_G = (r_F + ((r_H - r_F)/(p1.y()-p3.y()))*(p1.y() - yy)) + 0.5;
-                        int g_G = (g_F + ((g_H - g_F)/(p1.y()-p3.y()))*(p1.y() - yy)) + 0.5;
-                        int b_G = (b_F + ((b_H - b_F)/(p1.y()-p3.y()))*(p1.y() - yy)) + 0.5;
-                        QPoint imgCen = QPoint(mapXmax, mapYmax);
-                        QColor col = QColor(r_G, g_G, b_G);
-                        colourLayer->setPixel(imgCen.x() + xx, imgCen.y() + yy, col.rgb());
-                    }
-                }
-                i++;
-            }
-            j++;
-        }
-    }
-
-    windColorPlot  = new QGraphicsPixmapItem(QPixmap::fromImage(*colourLayer));
-    windColorPlot->setOffset(-mapXmax, -mapYmax);
-    windColorPlot->setPos(0, 0);
-    windColorPlot->setZValue(-1);
-
-    scene -> addItem(windColorPlot);
-
-    isInitWindSpeedDrawn = true;
+    m_infoPanel->show();
 }
-
-
-void MainWindow::drawWaveSigHtColor (int fc)
-{
-    vector<vector<double>> wvSigHt = gridData->getWaveSigHeight(fc);
-
-    if (wvSigHt.size() == 0) {
-        return;
-    }
-
-    double Di = gridData->getD();
-    double Dj = gridData->getD();
-    int xMin = gridData->getMinPoint().x();
-    int yMin = gridData->getMinPoint().y();
-    int xMax = gridData->getMaxPoint().x();
-    int yMax = gridData->getMaxPoint().y();
-    int Ni = gridData->getNi();
-    int Nj = gridData->getNj();
-
-    CustomScene* scene = m_pForm->GetGraphicsScene();
-    double stepi = scene->stepI();
-    double stepj = scene->stepJ();
-
-    scene->clearInitialGrid();
-
-    int mapXmax = scene->xExtent();
-    int mapYmax = scene->yExtent();
-
-    std::unordered_map<int, QColor> m = scene->GetWaveColourScale();  // wave colour scale
-
-
-
-    QVector<QVector<QColor>> cXY(Ni, QVector<QColor>(Nj, QColor(0,0,0))); // colour at every grid point
-
-    for (int j = 0; j < Nj; j++)
-    {
-        for (int i = 0; i < Ni; i++)
-        {
-            double htInHm = (wvSigHt[i][j]) * 10;
-
-            int h = (int)(qRound(htInHm));
-            qInfo() << h;
-            if (h == 0) {
-                cXY[i][j] = m[-1];
-            }
-            else {
-                cXY[i][j] = m[h];
-            }
-        }
-    }
-
-    QImage *colourLayer = new QImage (2*mapXmax, 2*mapYmax, QImage::Format_ARGB32);
-    QPoint imgCen = QPoint(mapXmax, mapYmax);
-
-
-    if (xMin < xMax)
-    {
-        int j = 0;
-        for (int y = yMin; y <= yMax && j < Nj - 1; y += Dj)
-        {
-            int i = 0;
-            float y_merc1 = toMerc(y)*stepj;
-            float y_merc2 = toMerc(y + Di)*stepj;
-
-            for (int x = xMin; x <= xMax && i < Ni - 1; x += Di)
-            {
-                // Grid -
-                // p3   p4
-                //
-                // p1   p2
-
-                double x1 = x*stepi, y1 = -y_merc1;
-                double x2 = (x + Di)*stepi, y2 = -y_merc2;
-                QPoint p1(x1, y1);
-                QPoint p2(x2, y1);
-                QPoint p3(x1, y2);
-                QPoint p4(x2, y2);
-
-                // respective colour at p1, p2, p3, p4
-                if (cXY[i][j] != m[-1]) {
-                    int r1 = cXY[i][j].red(),      g1 = cXY[i][j].green(),         b1 = cXY[i][j].blue(),
-                    r2 = cXY[i + 1][j].red(),      g2 = cXY[i + 1][j].green(),     b2 = cXY[i + 1][j].blue(),
-                    r3 = cXY[i][j + 1].red(),      g3 = cXY[i][j + 1].green(),     b3 = cXY[i][j + 1].blue(),
-                    r4 = cXY[i + 1][j + 1].red(),  g4 = cXY[i + 1][j + 1].green(), b4 = cXY[i + 1][j + 1].blue();
-
-                    // applying bilinear filtering in the given grid
-                    for (int yy = p1.y(); yy > p3.y(); yy--) {
-                        for (int xx = p1.x(); xx < p2.x(); xx++) {
-                            int r_F = (r1 + ((r2 - r1)/(p2.x()-p1.x()))*(xx-p1.x()));
-                            int g_F = (g1 + ((g2 - g1)/(p2.x()-p1.x()))*(xx-p1.x()));
-                            int b_F = (b1 + ((b2 - b1)/(p2.x()-p1.x()))*(xx-p1.x()));
-                            int r_H = (r3 + ((r4 - r3)/(p2.x()-p1.x()))*(xx-p1.x()));
-                            int g_H = (g3 + ((g4 - g3)/(p2.x()-p1.x()))*(xx-p1.x()));
-                            int b_H = (b3 + ((b4 - b3)/(p2.x()-p1.x()))*(xx-p1.x()));
-
-                            // colour at general (x, y) in grid
-                            int r_G = (r_F + ((r_H - r_F)/(p1.y()-p3.y()))*(p1.y() - yy)) + 0.5;
-                            int g_G = (g_F + ((g_H - g_F)/(p1.y()-p3.y()))*(p1.y() - yy)) + 0.5;
-                            int b_G = (b_F + ((b_H - b_F)/(p1.y()-p3.y()))*(p1.y() - yy)) + 0.5;
-                            QColor col = QColor(r_G, g_G, b_G);
-                            colourLayer->setPixel(imgCen.x() + xx, imgCen.y() + yy, col.rgb());
-                        }
-                    }
-                }
-                i++;
-            }
-            j++;
-        }
-    }
-
-    else
-    {
-        int j = 0;
-        for (int y = yMin; y <= yMax && j < Nj - 1; y+=Dj)
-        {
-            int i = 0;
-            float y_merc1 = toMerc(y)*stepj;
-            float y_merc2 = toMerc(y + Di)*stepj;
-
-            int skipped = 0;
-
-            for (int x = xMin; x <= 180 && i < Ni - 1; x += Di)
-            {
-                // Grid -
-                // p3   p4
-                //
-                // p1   p2
-
-                double x1 = x*stepi, y1 = -y_merc1;
-                double x2 = (x + Di)*stepi, y2 = -y_merc2;
-                QPoint p1(x1, y1);
-                QPoint p2(x2, y1);
-                QPoint p3(x1, y2);
-                QPoint p4(x2, y2);
-
-                // respective colour at p1, p2, p3, p4
-                if (cXY[i][j] != m[-1]) {
-                    int r1 = cXY[i][j].red(),      g1 = cXY[i][j].green(),         b1 = cXY[i][j].blue(),
-                    r2 = cXY[i + 1][j].red(),      g2 = cXY[i + 1][j].green(),     b2 = cXY[i + 1][j].blue(),
-                    r3 = cXY[i][j + 1].red(),      g3 = cXY[i][j + 1].green(),     b3 = cXY[i][j + 1].blue(),
-                    r4 = cXY[i + 1][j + 1].red(),  g4 = cXY[i + 1][j + 1].green(), b4 = cXY[i + 1][j + 1].blue();
-
-                    // applying bilinear filtering in the given grid
-                    for (int yy = p1.y(); yy > p3.y(); yy--) {
-                        for (int xx = p1.x(); xx < p2.x(); xx++) {
-                            int r_F = (r1 + ((r2 - r1)/(p2.x()-p1.x()))*(xx-p1.x()));
-                            int g_F = (g1 + ((g2 - g1)/(p2.x()-p1.x()))*(xx-p1.x()));
-                            int b_F = (b1 + ((b2 - b1)/(p2.x()-p1.x()))*(xx-p1.x()));
-                            int r_H = (r3 + ((r4 - r3)/(p2.x()-p1.x()))*(xx-p1.x()));
-                            int g_H = (g3 + ((g4 - g3)/(p2.x()-p1.x()))*(xx-p1.x()));
-                            int b_H = (b3 + ((b4 - b3)/(p2.x()-p1.x()))*(xx-p1.x()));
-
-                            // colour at general (x, y) in grid
-                            int r_G = (r_F + ((r_H - r_F)/(p1.y()-p3.y()))*(p1.y() - yy)) + 0.5;
-                            int g_G = (g_F + ((g_H - g_F)/(p1.y()-p3.y()))*(p1.y() - yy)) + 0.5;
-                            int b_G = (b_F + ((b_H - b_F)/(p1.y()-p3.y()))*(p1.y() - yy)) + 0.5;
-                            QColor col = QColor(r_G, g_G, b_G);
-                            colourLayer->setPixel(imgCen.x() + xx, imgCen.y() + yy, col.rgb());
-                        }
-                    }
-                }
-                i++;
-                if (x + Di > 180) {
-                    skipped = 180 - x;
-                }
-            }
-
-            int skip = skipped;
-
-            for (int x = -179 + skip; x <= xMax && i < Ni - 1; x += Di)
-            {
-                // Grid -
-                // p3   p4
-                //
-                // p1   p2
-
-                double x1 = x*stepi, y1 = -y_merc1;
-                double x2 = (x + Di)*stepi, y2 = -y_merc2;
-                QPoint p1(x1, y1);
-                QPoint p2(x2, y1);
-                QPoint p3(x1, y2);
-                QPoint p4(x2, y2);
-
-                // respective colour at p1, p2, p3, p4
-                if (cXY[i][j] != m[-1]) {
-                    int r1 = cXY[i][j].red(),      g1 = cXY[i][j].green(),         b1 = cXY[i][j].blue(),
-                    r2 = cXY[i + 1][j].red(),      g2 = cXY[i + 1][j].green(),     b2 = cXY[i + 1][j].blue(),
-                    r3 = cXY[i][j + 1].red(),      g3 = cXY[i][j + 1].green(),     b3 = cXY[i][j + 1].blue(),
-                    r4 = cXY[i + 1][j + 1].red(),  g4 = cXY[i + 1][j + 1].green(), b4 = cXY[i + 1][j + 1].blue();
-
-                    // applying bilinear filtering in the given grid
-                    for (int yy = p1.y(); yy > p3.y(); yy--) {
-                        for (int xx = p1.x(); xx < p2.x(); xx++) {
-                            int r_F = (r1 + ((r2 - r1)/(p2.x()-p1.x()))*(xx-p1.x()));
-                            int g_F = (g1 + ((g2 - g1)/(p2.x()-p1.x()))*(xx-p1.x()));
-                            int b_F = (b1 + ((b2 - b1)/(p2.x()-p1.x()))*(xx-p1.x()));
-                            int r_H = (r3 + ((r4 - r3)/(p2.x()-p1.x()))*(xx-p1.x()));
-                            int g_H = (g3 + ((g4 - g3)/(p2.x()-p1.x()))*(xx-p1.x()));
-                            int b_H = (b3 + ((b4 - b3)/(p2.x()-p1.x()))*(xx-p1.x()));
-
-                            // colour at general (x, y) in grid
-                            int r_G = (r_F + ((r_H - r_F)/(p1.y()-p3.y()))*(p1.y() - yy)) + 0.5;
-                            int g_G = (g_F + ((g_H - g_F)/(p1.y()-p3.y()))*(p1.y() - yy)) + 0.5;
-                            int b_G = (b_F + ((b_H - b_F)/(p1.y()-p3.y()))*(p1.y() - yy)) + 0.5;
-                            QColor col = QColor(r_G, g_G, b_G);
-                            colourLayer->setPixel(imgCen.x() + xx, imgCen.y() + yy, col.rgb());
-                        }
-                    }
-                }
-                i++;
-            }
-            j++;
-        }
-    }
-
-    waveSigHtColorPlot  = new QGraphicsPixmapItem(QPixmap::fromImage(*colourLayer));
-    waveSigHtColorPlot->setOffset(-mapXmax, -mapYmax);
-    waveSigHtColorPlot->setPos(0, 0);
-    waveSigHtColorPlot->setZValue(-1);
-    scene->addItem(waveSigHtColorPlot);
-
-    isInitWaveSigHtDrawn = true;
-}
-
-
-void MainWindow::drawWindWaveArrow(int fc) {
-
-    vector<vector<double>> wWvHt = gridData->getWindWaveHeight(fc);
-    vector<vector<int>> wWvDir = gridData->getWindWaveDir(fc);
-
-    if (wWvHt.size() == 0 || wWvDir.size() == 0) {
-        return;
-    }
-
-    double Di = gridData->getD();
-    double Dj = gridData->getD();
-    int xMin = gridData->getMinPoint().x();
-    int yMin = gridData->getMinPoint().y();
-    int xMax = gridData->getMaxPoint().x();
-    int yMax = gridData->getMaxPoint().y();
-    int Ni = gridData->getNi();
-    int Nj = gridData->getNj();
-
-
-    CustomScene* scene = m_pForm->GetGraphicsScene();
-
-    double stepi = scene->stepI();
-    double stepj = scene->stepJ();
-
-    // arrow properties
-    QPen pen = QPen(Qt::black, 0.8);
-    pen.setCosmetic(true);
-    double arrowSize = stepi;
-
-
-    if (xMin < xMax)
-    {
-        int j = 0;
-        for (int y = yMin; y <= yMax && j < Nj; y += Dj)
-        {
-            int i = 0;
-            for (int x = xMin; x <= xMax && i < Ni; x += Di)
-            {
-                double h = wWvHt[i][j];
-                if (h == 0) {
-                    i++;
-                    continue;
-                }
-                double ang = (90 - (wWvDir[i][j])) * M_PI / 180.0;  // angle of arrow with +ve x axis in scene's ref
-                double dx = arrowSize * qCos(ang);         // projection of length of arrow on x - axis (in scene's ref)
-                double dy = arrowSize * qSin(ang);         // projection of length of arrow on y - axis      ,,
-                double xx = x * stepi;                      // starting coordinates of the arrow
-                double yy = -toMerc(y) * stepj;
-
-                QGraphicsItem* windWaveItem = scene->addLine(xx, yy, xx + dx, yy + dy, pen);
-                windWaveArrowPlot.push_back(windWaveItem);
-
-                //arrow heads
-                double ax1 = xx + dx - qCos(ang - M_PI / 6) * arrowSize / 5;
-                double ay1 = yy + dy - qSin(ang - M_PI / 6) * arrowSize / 5;
-                double ax2 = xx + dx - qSin(M_PI / 3 - ang) * arrowSize / 5;
-                double ay2 = yy + dy - qCos(M_PI / 3 - ang) * arrowSize / 5;
-
-                windWaveItem = scene->addLine(xx + dx, yy + dy, ax1, ay1, pen);
-                windWaveArrowPlot.push_back(windWaveItem);
-
-                windWaveItem = scene->addLine(xx + dx, yy + dy, ax2, ay2, pen);
-                windWaveArrowPlot.push_back(windWaveItem);
-
-                i++;
-            }
-            j++;
-        }
-    }
-
-    else
-    {
-        int j = 0;
-        for (int y = yMin; y <= yMax && j < Nj; y+=Dj)
-        {
-            int i = 0;
-            int skipped = 0;
-            for (int x = xMin; x <= 180; x+=Di)
-            {
-                double h = wWvHt[i][j];
-                if (h == 0) {
-                    i++;
-                    continue;
-                }
-                double ang = (wWvDir[i][j]) * M_PI / 180.0;   // angle of arrow with +ve x axis in scene's ref
-                double dx = arrowSize*qCos(ang);         // projection of length of arrow on x - axis (in scene's ref)
-                double dy = arrowSize*qSin(ang);         // projection of length of arrow on y - axis      ,,
-                double xx = x*stepi;   // starting coordinates of the arrow
-                double yy = -toMerc(y)*stepj;
-
-                QGraphicsItem* windWaveItem = scene->addLine(xx, yy, xx + dx, yy + dy, pen);
-                windWaveArrowPlot.push_back(windWaveItem);
-
-                //arrow heads
-                double ax1 = xx + dx - qCos(ang - M_PI / 6) * arrowSize / 5;
-                double ay1 = yy + dy - qSin(ang - M_PI / 6) * arrowSize / 5;
-                double ax2 = xx + dx - qSin(M_PI / 3 - ang) * arrowSize / 5;
-                double ay2 = yy + dy - qCos(M_PI / 3 - ang) * arrowSize / 5;
-
-                windWaveItem = scene->addLine(xx + dx, yy + dy, ax1, ay1, pen);
-                windWaveArrowPlot.push_back(windWaveItem);
-
-                windWaveItem = scene->addLine(xx + dx, yy + dy, ax2, ay2, pen);
-                windWaveArrowPlot.push_back(windWaveItem);
-
-                i++;
-                if (x + Di > 180) {
-                    skipped = 180 - x;
-                }
-            }
-
-            int skip = Di - 1 - skipped;
-
-            for (int x = -179 + skip; x <= xMax && i < Ni; x += Di)
-            {
-                double h = wWvHt[i][j];
-                if (h == 0) {
-                    i++;
-                    continue;
-                }
-                double ang = (wWvDir[i][j]) * M_PI / 180.0;  // angle of arrow with +ve x axis in scene's ref
-                double dx = arrowSize*qCos(ang);         // projection of length of arrow on x - axis (in scene's ref)
-                double dy = arrowSize*qSin(ang);         // projection of length of arrow on y - axis      ,,
-                double xx = x*stepi;   // starting coordinates of the arrow
-                double yy = -toMerc(y)*stepj;
-
-                QGraphicsItem* windWaveItem = scene->addLine(xx, yy, xx + dx, yy + dy, pen);
-                windWaveArrowPlot.push_back(windWaveItem);
-
-                //arrow heads
-                double ax1 = xx + dx - qCos(ang - M_PI / 6) * arrowSize / 5;
-                double ay1 = yy + dy - qSin(ang - M_PI / 6) * arrowSize / 5;
-                double ax2 = xx + dx - qSin(M_PI / 3 - ang) * arrowSize / 5;
-                double ay2 = yy + dy - qCos(M_PI / 3 - ang) * arrowSize / 5;
-
-                windWaveItem = scene->addLine(xx + dx, yy + dy, ax1, ay1, pen);
-                windWaveArrowPlot.push_back(windWaveItem);
-
-                windWaveItem = scene->addLine(xx + dx, yy + dy, ax2, ay2, pen);
-                windWaveArrowPlot.push_back(windWaveItem);
-
-                i++;
-            }
-            j++;
-        }
-    }
-
-    areInitWindArrowsDrawn = true;
-}
-
-void MainWindow::drawWindWaveHtColor (int fc)
-{
-    vector<vector<double>> wWvHt = gridData->getWindWaveHeight(fc);
-
-    if (wWvHt.size() == 0) {
-        return;
-    }
-
-    double Di = gridData->getD();
-    double Dj = gridData->getD();
-    int xMin = gridData->getMinPoint().x();
-    int yMin = gridData->getMinPoint().y();
-    int xMax = gridData->getMaxPoint().x();
-    int yMax = gridData->getMaxPoint().y();
-    int Ni = gridData->getNi();
-    int Nj = gridData->getNj();
-
-    CustomScene* scene = m_pForm->GetGraphicsScene();
-    double stepi = scene->stepI();
-    double stepj = scene->stepJ();
-
-    scene->clearInitialGrid();
-
-    int mapXmax = scene->xExtent();
-    int mapYmax = scene->yExtent();
-
-    std::unordered_map<int, QColor> m = scene->GetWaveColourScale();  // wind colour scale
-
-
-
-    QVector<QVector<QColor>> cXY(Ni, QVector<QColor>(Nj, QColor(0,0,0))); // colour at every grid point
-
-    for (int j = 0; j < Nj; j++)
-    {
-        for (int i = 0; i < Ni; i++)
-        {
-            double htInHm = (wWvHt[i][j]) * 10;
-
-            int h = (int)(qRound(htInHm));
-            if (h == 0) {
-                cXY[i][j] = m[-1];
-            }
-            else {
-                cXY[i][j] = m[h];
-            }
-        }
-    }
-
-    QImage *colourLayer = new QImage (2*mapXmax, 2*mapYmax, QImage::Format_ARGB32);
-    QPoint imgCen = QPoint(mapXmax, mapYmax);
-
-    if (xMin < xMax)
-    {
-        int j = 0;
-        for (int y = yMin; y <= yMax && j < Nj - 1; y += Dj)
-        {
-            int i = 0;
-            float y_merc1 = toMerc(y)*stepj;
-            float y_merc2 = toMerc(y + Di)*stepj;
-
-            for (int x = xMin; x <= xMax && i < Ni - 1; x += Di)
-            {
-                // Grid -
-                // p3   p4
-                //
-                // p1   p2
-
-                double x1 = x*stepi, y1 = -y_merc1;
-                double x2 = (x + Di)*stepi, y2 = -y_merc2;
-                QPoint p1(x1, y1);
-                QPoint p2(x2, y1);
-                QPoint p3(x1, y2);
-                QPoint p4(x2, y2);
-
-                // respective colour at p1, p2, p3, p4
-                if (cXY[i][j] != m[-1]) {
-                    int r1 = cXY[i][j].red(),      g1 = cXY[i][j].green(),         b1 = cXY[i][j].blue(),
-                    r2 = cXY[i + 1][j].red(),      g2 = cXY[i + 1][j].green(),     b2 = cXY[i + 1][j].blue(),
-                    r3 = cXY[i][j + 1].red(),      g3 = cXY[i][j + 1].green(),     b3 = cXY[i][j + 1].blue(),
-                    r4 = cXY[i + 1][j + 1].red(),  g4 = cXY[i + 1][j + 1].green(), b4 = cXY[i + 1][j + 1].blue();
-
-                    // applying bilinear filtering in the given grid
-                    for (int yy = p1.y(); yy > p3.y(); yy--) {
-                        for (int xx = p1.x(); xx < p2.x(); xx++) {
-                            int r_F = (r1 + ((r2 - r1)/(p2.x()-p1.x()))*(xx-p1.x()));
-                            int g_F = (g1 + ((g2 - g1)/(p2.x()-p1.x()))*(xx-p1.x()));
-                            int b_F = (b1 + ((b2 - b1)/(p2.x()-p1.x()))*(xx-p1.x()));
-                            int r_H = (r3 + ((r4 - r3)/(p2.x()-p1.x()))*(xx-p1.x()));
-                            int g_H = (g3 + ((g4 - g3)/(p2.x()-p1.x()))*(xx-p1.x()));
-                            int b_H = (b3 + ((b4 - b3)/(p2.x()-p1.x()))*(xx-p1.x()));
-
-                            // colour at general (x, y) in grid
-                            int r_G = (r_F + ((r_H - r_F)/(p1.y()-p3.y()))*(p1.y() - yy)) + 0.5;
-                            int g_G = (g_F + ((g_H - g_F)/(p1.y()-p3.y()))*(p1.y() - yy)) + 0.5;
-                            int b_G = (b_F + ((b_H - b_F)/(p1.y()-p3.y()))*(p1.y() - yy)) + 0.5;
-                            QColor col = QColor(r_G, g_G, b_G);
-                            colourLayer->setPixel(imgCen.x() + xx, imgCen.y() + yy, col.rgb());
-                        }
-                    }
-                }
-                i++;
-            }
-            j++;
-        }
-    }
-
-    else
-    {
-        int j = 0;
-        for (int y = yMin; y <= yMax && j < Nj - 1; y += Dj)
-        {
-            int i = 0;
-            float y_merc1 = toMerc(y)*stepj;
-            float y_merc2 = toMerc(y + Di)*stepj;
-
-            int skipped = 0;
-
-            for (int x = xMin; x <= 180 && i < Ni - 1; x += Di)
-            {
-                // Grid -
-                // p3   p4
-                //
-                // p1   p2
-
-                double x1 = x*stepi, y1 = -y_merc1;
-                double x2 = (x + Di)*stepi, y2 = -y_merc2;
-                QPoint p1(x1, y1);
-                QPoint p2(x2, y1);
-                QPoint p3(x1, y2);
-                QPoint p4(x2, y2);
-
-                // respective colour at p1, p2, p3, p4
-                if (cXY[i][j] != m[-1]) {
-                    int r1 = cXY[i][j].red(),      g1 = cXY[i][j].green(),         b1 = cXY[i][j].blue(),
-                    r2 = cXY[i + 1][j].red(),      g2 = cXY[i + 1][j].green(),     b2 = cXY[i + 1][j].blue(),
-                    r3 = cXY[i][j + 1].red(),      g3 = cXY[i][j + 1].green(),     b3 = cXY[i][j + 1].blue(),
-                    r4 = cXY[i + 1][j + 1].red(),  g4 = cXY[i + 1][j + 1].green(), b4 = cXY[i + 1][j + 1].blue();
-
-                    // applying bilinear filtering in the given grid
-                    for (int yy = p1.y(); yy > p3.y(); yy--) {
-                        for (int xx = p1.x(); xx < p2.x(); xx++) {
-                            int r_F = (r1 + ((r2 - r1)/(p2.x()-p1.x()))*(xx-p1.x()));
-                            int g_F = (g1 + ((g2 - g1)/(p2.x()-p1.x()))*(xx-p1.x()));
-                            int b_F = (b1 + ((b2 - b1)/(p2.x()-p1.x()))*(xx-p1.x()));
-                            int r_H = (r3 + ((r4 - r3)/(p2.x()-p1.x()))*(xx-p1.x()));
-                            int g_H = (g3 + ((g4 - g3)/(p2.x()-p1.x()))*(xx-p1.x()));
-                            int b_H = (b3 + ((b4 - b3)/(p2.x()-p1.x()))*(xx-p1.x()));
-
-                            // colour at general (x, y) in grid
-                            int r_G = (r_F + ((r_H - r_F)/(p1.y()-p3.y()))*(p1.y() - yy)) + 0.5;
-                            int g_G = (g_F + ((g_H - g_F)/(p1.y()-p3.y()))*(p1.y() - yy)) + 0.5;
-                            int b_G = (b_F + ((b_H - b_F)/(p1.y()-p3.y()))*(p1.y() - yy)) + 0.5;
-                            QColor col = QColor(r_G, g_G, b_G);
-                            colourLayer->setPixel(imgCen.x() + xx, imgCen.y() + yy, col.rgb());
-                        }
-                    }
-                }
-                i++;
-                if (x + Di > 180) {
-                    skipped = 180 - x;
-                }
-            }
-
-            int skip = skipped;
-
-            for (int x = -179 + skip; x <= xMax && i < Ni - 1; x += Di)
-            {
-                // Grid -
-                // p3   p4
-                //
-                // p1   p2
-
-                double x1 = x*stepi, y1 = -y_merc1;
-                double x2 = (x + Di)*stepi, y2 = -y_merc2;
-                QPoint p1(x1, y1);
-                QPoint p2(x2, y1);
-                QPoint p3(x1, y2);
-                QPoint p4(x2, y2);
-
-                // respective colour at p1, p2, p3, p4
-                if (cXY[i][j] != m[-1]) {
-                    int r1 = cXY[i][j].red(),      g1 = cXY[i][j].green(),         b1 = cXY[i][j].blue(),
-                    r2 = cXY[i + 1][j].red(),      g2 = cXY[i + 1][j].green(),     b2 = cXY[i + 1][j].blue(),
-                    r3 = cXY[i][j + 1].red(),      g3 = cXY[i][j + 1].green(),     b3 = cXY[i][j + 1].blue(),
-                    r4 = cXY[i + 1][j + 1].red(),  g4 = cXY[i + 1][j + 1].green(), b4 = cXY[i + 1][j + 1].blue();
-
-                    // applying bilinear filtering in the given grid
-                    for (int yy = p1.y(); yy > p3.y(); yy--) {
-                        for (int xx = p1.x(); xx < p2.x(); xx++) {
-                            int r_F = (r1 + ((r2 - r1)/(p2.x()-p1.x()))*(xx-p1.x()));
-                            int g_F = (g1 + ((g2 - g1)/(p2.x()-p1.x()))*(xx-p1.x()));
-                            int b_F = (b1 + ((b2 - b1)/(p2.x()-p1.x()))*(xx-p1.x()));
-                            int r_H = (r3 + ((r4 - r3)/(p2.x()-p1.x()))*(xx-p1.x()));
-                            int g_H = (g3 + ((g4 - g3)/(p2.x()-p1.x()))*(xx-p1.x()));
-                            int b_H = (b3 + ((b4 - b3)/(p2.x()-p1.x()))*(xx-p1.x()));
-
-                            // colour at general (x, y) in grid
-                            int r_G = (r_F + ((r_H - r_F)/(p1.y()-p3.y()))*(p1.y() - yy)) + 0.5;
-                            int g_G = (g_F + ((g_H - g_F)/(p1.y()-p3.y()))*(p1.y() - yy)) + 0.5;
-                            int b_G = (b_F + ((b_H - b_F)/(p1.y()-p3.y()))*(p1.y() - yy)) + 0.5;
-                            QColor col = QColor(r_G, g_G, b_G);
-                            colourLayer->setPixel(imgCen.x() + xx, imgCen.y() + yy, col.rgb());
-                        }
-                    }
-                }
-                i++;
-            }
-            j++;
-        }
-    }
-
-    windWaveHtColorPlot  = new QGraphicsPixmapItem(QPixmap::fromImage(*colourLayer));
-    windWaveHtColorPlot->setOffset(-mapXmax, -mapYmax);
-    windWaveHtColorPlot->setPos(0, 0);
-    windWaveHtColorPlot->setZValue(-1);
-
-    scene->addItem(windWaveHtColorPlot);
-
-    isInitWindWaveHtDrawn = true;
-}
-
-
-void MainWindow::drawSwellWaveHtColor (int fc)
-{
-    vector<vector<double>> sWvHt = gridData->getSwellWaveHeight(fc);
-
-    if (sWvHt.size() == 0) {
-        return;
-    }
-
-    double Di = gridData->getD();
-    double Dj = gridData->getD();
-    int xMin = gridData->getMinPoint().x();
-    int yMin = gridData->getMinPoint().y();
-    int xMax = gridData->getMaxPoint().x();
-    int yMax = gridData->getMaxPoint().y();
-    int Ni = gridData->getNi();
-    int Nj = gridData->getNj();
-
-    CustomScene* scene = m_pForm->GetGraphicsScene();
-    double stepi = scene->stepI();
-    double stepj = scene->stepJ();
-
-    int mapXmax = scene->xExtent();
-    int mapYmax = scene->yExtent();
-
-    std::unordered_map<int, QColor> m = scene->GetWaveColourScale();  // wind colour scale
-
-
-
-    QVector<QVector<QColor>> cXY(Ni, QVector<QColor>(Nj, QColor(0,0,0))); // colour at every grid point
-
-    for (int j = 0; j < Nj; j++)
-    {
-        for (int i = 0; i < Ni; i++)
-        {
-            double htInHm = (sWvHt[i][j]) * 10;
-
-            int h = (int)(qRound(htInHm));
-            if (h == 0) {
-                cXY[i][j] = m[-1];
-            }
-            else {
-                cXY[i][j] = m[h];
-            }
-        }
-    }
-
-    QImage *colourLayer = new QImage (2*mapXmax, 2*mapYmax, QImage::Format_ARGB32);
-    QPoint imgCen = QPoint(mapXmax, mapYmax);
-
-    if (xMin < xMax)
-    {
-        int j = 0;
-        for (int y = yMin; y <= yMax && j < Nj - 1; y += Dj)
-        {
-            int i = 0;
-            float y_merc1 = toMerc(y)*stepj;
-            float y_merc2 = toMerc(y + Di)*stepj;
-
-            for (int x = xMin; x <= xMax && i < Ni - 1; x += Di)
-            {
-                // Grid -
-                // p3   p4
-                //
-                // p1   p2
-
-                double x1 = x*stepi, y1 = -y_merc1;
-                double x2 = (x + Di)*stepi, y2 = -y_merc2;
-                QPoint p1(x1, y1);
-                QPoint p2(x2, y1);
-                QPoint p3(x1, y2);
-                QPoint p4(x2, y2);
-
-                // respective colour at p1, p2, p3, p4
-                if (cXY[i][j] != m[-1]) {
-                    int r1 = cXY[i][j].red(),      g1 = cXY[i][j].green(),         b1 = cXY[i][j].blue(),
-                    r2 = cXY[i + 1][j].red(),      g2 = cXY[i + 1][j].green(),     b2 = cXY[i + 1][j].blue(),
-                    r3 = cXY[i][j + 1].red(),      g3 = cXY[i][j + 1].green(),     b3 = cXY[i][j + 1].blue(),
-                    r4 = cXY[i + 1][j + 1].red(),  g4 = cXY[i + 1][j + 1].green(), b4 = cXY[i + 1][j + 1].blue();
-
-                    // applying bilinear filtering in the given grid
-                    for (int yy = p1.y(); yy > p3.y(); yy--) {
-                        for (int xx = p1.x(); xx < p2.x(); xx++) {
-                            int r_F = (r1 + ((r2 - r1)/(p2.x()-p1.x()))*(xx-p1.x()));
-                            int g_F = (g1 + ((g2 - g1)/(p2.x()-p1.x()))*(xx-p1.x()));
-                            int b_F = (b1 + ((b2 - b1)/(p2.x()-p1.x()))*(xx-p1.x()));
-                            int r_H = (r3 + ((r4 - r3)/(p2.x()-p1.x()))*(xx-p1.x()));
-                            int g_H = (g3 + ((g4 - g3)/(p2.x()-p1.x()))*(xx-p1.x()));
-                            int b_H = (b3 + ((b4 - b3)/(p2.x()-p1.x()))*(xx-p1.x()));
-
-                            // colour at general (x, y) in grid
-                            int r_G = (r_F + ((r_H - r_F)/(p1.y()-p3.y()))*(p1.y() - yy)) + 0.5;
-                            int g_G = (g_F + ((g_H - g_F)/(p1.y()-p3.y()))*(p1.y() - yy)) + 0.5;
-                            int b_G = (b_F + ((b_H - b_F)/(p1.y()-p3.y()))*(p1.y() - yy)) + 0.5;
-                            QColor col = QColor(r_G, g_G, b_G);
-                            colourLayer->setPixel(imgCen.x() + xx, imgCen.y() + yy, col.rgb());
-                        }
-                    }
-                }
-                i++;
-            }
-            j++;
-        }
-    }
-
-    else
-    {
-        int j = 0;
-        for (int y = yMin; y <= yMax && j < Nj - 1; y += Dj)
-        {
-            int i = 0;
-            float y_merc1 = toMerc(y)*stepj;
-            float y_merc2 = toMerc(y + Di)*stepj;
-
-            int skipped = 0;
-
-            for (int x = xMin; x <= 180 && i < Ni - 1; x += Di)
-            {
-                // Grid -
-                // p3   p4
-                //
-                // p1   p2
-
-                double x1 = x*stepi, y1 = -y_merc1;
-                double x2 = (x + Di)*stepi, y2 = -y_merc2;
-                QPoint p1(x1, y1);
-                QPoint p2(x2, y1);
-                QPoint p3(x1, y2);
-                QPoint p4(x2, y2);
-
-                // respective colour at p1, p2, p3, p4
-                if (cXY[i][j] != m[-1]) {
-                    int r1 = cXY[i][j].red(),      g1 = cXY[i][j].green(),         b1 = cXY[i][j].blue(),
-                    r2 = cXY[i + 1][j].red(),      g2 = cXY[i + 1][j].green(),     b2 = cXY[i + 1][j].blue(),
-                    r3 = cXY[i][j + 1].red(),      g3 = cXY[i][j + 1].green(),     b3 = cXY[i][j + 1].blue(),
-                    r4 = cXY[i + 1][j + 1].red(),  g4 = cXY[i + 1][j + 1].green(), b4 = cXY[i + 1][j + 1].blue();
-
-                    // applying bilinear filtering in the given grid
-                    for (int yy = p1.y(); yy > p3.y(); yy--) {
-                        for (int xx = p1.x(); xx < p2.x(); xx++) {
-                            int r_F = (r1 + ((r2 - r1)/(p2.x()-p1.x()))*(xx-p1.x()));
-                            int g_F = (g1 + ((g2 - g1)/(p2.x()-p1.x()))*(xx-p1.x()));
-                            int b_F = (b1 + ((b2 - b1)/(p2.x()-p1.x()))*(xx-p1.x()));
-                            int r_H = (r3 + ((r4 - r3)/(p2.x()-p1.x()))*(xx-p1.x()));
-                            int g_H = (g3 + ((g4 - g3)/(p2.x()-p1.x()))*(xx-p1.x()));
-                            int b_H = (b3 + ((b4 - b3)/(p2.x()-p1.x()))*(xx-p1.x()));
-
-                            // colour at general (x, y) in grid
-                            int r_G = (r_F + ((r_H - r_F)/(p1.y()-p3.y()))*(p1.y() - yy)) + 0.5;
-                            int g_G = (g_F + ((g_H - g_F)/(p1.y()-p3.y()))*(p1.y() - yy)) + 0.5;
-                            int b_G = (b_F + ((b_H - b_F)/(p1.y()-p3.y()))*(p1.y() - yy)) + 0.5;
-                            QColor col = QColor(r_G, g_G, b_G);
-                            colourLayer->setPixel(imgCen.x() + xx, imgCen.y() + yy, col.rgb());
-                        }
-                    }
-                }
-                i++;
-                if (x + Di > 180) {
-                    skipped = 180 - x;
-                }
-            }
-
-            int skip = skipped;
-
-            for (int x = -179 + skip; x <= xMax && i < Ni - 1; x += Di)
-            {
-                // Grid -
-                // p3   p4
-                //
-                // p1   p2
-
-                double x1 = x*stepi, y1 = -y_merc1;
-                double x2 = (x + Di)*stepi, y2 = -y_merc2;
-                QPoint p1(x1, y1);
-                QPoint p2(x2, y1);
-                QPoint p3(x1, y2);
-                QPoint p4(x2, y2);
-
-                // respective colour at p1, p2, p3, p4
-                if (cXY[i][j] != m[-1]) {
-                    int r1 = cXY[i][j].red(),      g1 = cXY[i][j].green(),         b1 = cXY[i][j].blue(),
-                    r2 = cXY[i + 1][j].red(),      g2 = cXY[i + 1][j].green(),     b2 = cXY[i + 1][j].blue(),
-                    r3 = cXY[i][j + 1].red(),      g3 = cXY[i][j + 1].green(),     b3 = cXY[i][j + 1].blue(),
-                    r4 = cXY[i + 1][j + 1].red(),  g4 = cXY[i + 1][j + 1].green(), b4 = cXY[i + 1][j + 1].blue();
-
-                    // applying bilinear filtering in the given grid
-                    for (int yy = p1.y(); yy > p3.y(); yy--) {
-                        for (int xx = p1.x(); xx < p2.x(); xx++) {
-                            int r_F = (r1 + ((r2 - r1)/(p2.x()-p1.x()))*(xx-p1.x()));
-                            int g_F = (g1 + ((g2 - g1)/(p2.x()-p1.x()))*(xx-p1.x()));
-                            int b_F = (b1 + ((b2 - b1)/(p2.x()-p1.x()))*(xx-p1.x()));
-                            int r_H = (r3 + ((r4 - r3)/(p2.x()-p1.x()))*(xx-p1.x()));
-                            int g_H = (g3 + ((g4 - g3)/(p2.x()-p1.x()))*(xx-p1.x()));
-                            int b_H = (b3 + ((b4 - b3)/(p2.x()-p1.x()))*(xx-p1.x()));
-
-                            // colour at general (x, y) in grid
-                            int r_G = (r_F + ((r_H - r_F)/(p1.y()-p3.y()))*(p1.y() - yy)) + 0.5;
-                            int g_G = (g_F + ((g_H - g_F)/(p1.y()-p3.y()))*(p1.y() - yy)) + 0.5;
-                            int b_G = (b_F + ((b_H - b_F)/(p1.y()-p3.y()))*(p1.y() - yy)) + 0.5;
-                            QColor col = QColor(r_G, g_G, b_G);
-                            colourLayer->setPixel(imgCen.x() + xx, imgCen.y() + yy, col.rgb());
-                        }
-                    }
-                }
-                i++;
-            }
-            j++;
-        }
-    }
-
-    swellWaveHtColorPlot  = new QGraphicsPixmapItem(QPixmap::fromImage(*colourLayer));
-    swellWaveHtColorPlot->setOffset(-mapXmax, -mapYmax);
-    swellWaveHtColorPlot->setPos(0, 0);
-    swellWaveHtColorPlot->setZValue(-1);
-
-    scene->addItem(swellWaveHtColorPlot);
-
-    isInitSwellWaveHtDrawn = true;
-}
-
-void MainWindow::drawSwellWaveArrow(int fc) {
-
-    vector<vector<double>> sWvHt = gridData->getCurrentSpeed(fc);
-    vector<vector<int>> sWvDir = gridData->getCurrentDir(fc);
-
-    if (sWvHt.size() == 0 || sWvDir.size() == 0) {
-        return;
-    }
-
-    double Di = gridData->getD();
-    double Dj = gridData->getD();
-    int xMin = gridData->getMinPoint().x();
-    int yMin = gridData->getMinPoint().y();
-    int xMax = gridData->getMaxPoint().x();
-    int yMax = gridData->getMaxPoint().y();
-    int Ni = gridData->getNi();
-    int Nj = gridData->getNj();
-
-    CustomScene* scene = m_pForm->GetGraphicsScene();
-
-    double stepi = scene->stepI();
-    double stepj = scene->stepJ();
-
-    // arrow properties
-    QPen pen = QPen(Qt::black, 0.8);
-    pen.setCosmetic(true);
-    double arrowSize = stepi;
-
-    if (xMin < xMax)
-    {
-        int j = 0;
-        for (int y = yMin; y <= yMax && j < Nj; y += Dj)
-        {
-            int i = 0;
-            for (int x = xMin; x <= xMax && i < Ni; x += Di)
-            {
-                double h = sWvHt[i][j];
-                if (h == 0) {
-                    i++;
-                    continue;
-                }
-                double ang = (sWvDir[i][j]) * M_PI / 180.0;  // angle of arrow with +ve x axis in scene's ref
-                double dx = arrowSize * qCos(ang);         // projection of length of arrow on x - axis (in scene's ref)
-                double dy = arrowSize * qSin(ang);         // projection of length of arrow on y - axis      ,,
-                double xx = x * stepi;   // starting coordinates of the arrow
-                double yy = -toMerc(y) * stepj;
-
-                QGraphicsItem* swellWaveItem = scene->addLine(xx, yy, xx + dx, yy + dy, pen);
-                swellWaveArrowPlot.push_back(swellWaveItem);
-
-                //arrow heads
-                double ax1 = xx + dx - qCos(ang - M_PI / 6) * arrowSize / 5;
-                double ay1 = yy + dy - qSin(ang - M_PI / 6) * arrowSize / 5;
-                double ax2 = xx + dx - qSin(M_PI / 3 - ang) * arrowSize / 5;
-                double ay2 = yy + dy - qCos(M_PI / 3 - ang) * arrowSize / 5;
-
-                swellWaveItem = scene->addLine(xx + dx, yy + dy, ax1, ay1, pen);
-                swellWaveArrowPlot.push_back(swellWaveItem);
-
-                swellWaveItem = scene->addLine(xx + dx, yy + dy, ax2, ay2, pen);
-                swellWaveArrowPlot.push_back(swellWaveItem);
-
-                 i++;
-            }
-            j++;
-        }
-    }
-
-    else
-    {
-        int j = 0;
-        for (int y = yMin; y <= yMax && j < Nj; y+=Dj)
-        {
-            int i = 0;
-            int skipped = 0;
-            for (int x = xMin; x <= 180; x+=Di)
-            {
-                double h = sWvHt[i][j];
-                if (h == 0) {
-                    i++;
-                    continue;
-                }
-                double ang = (sWvDir[i][j]) * M_PI / 180.0;   // angle of arrow with +ve x axis in scene's ref
-                double dx = arrowSize*qCos(ang);         // projection of length of arrow on x - axis (in scene's ref)
-                double dy = arrowSize*qSin(ang);         // projection of length of arrow on y - axis      ,,
-                double xx = x*stepi;   // starting coordinates of the arrow
-                double yy = -toMerc(y)*stepj;
-
-                QGraphicsItem* swellWaveItem = scene->addLine(xx, yy, xx + dx, yy + dy, pen);
-                swellWaveArrowPlot.push_back(swellWaveItem);
-
-                //arrow heads
-                double ax1 = xx + dx - qCos(ang - M_PI / 6) * arrowSize / 5;
-                double ay1 = yy + dy - qSin(ang - M_PI / 6) * arrowSize / 5;
-                double ax2 = xx + dx - qSin(M_PI / 3 - ang) * arrowSize / 5;
-                double ay2 = yy + dy - qCos(M_PI / 3 - ang) * arrowSize / 5;
-
-                swellWaveItem = scene->addLine(xx + dx, yy + dy, ax1, ay1, pen);
-                swellWaveArrowPlot.push_back(swellWaveItem);
-
-                swellWaveItem = scene->addLine(xx + dx, yy + dy, ax2, ay2, pen);
-                swellWaveArrowPlot.push_back(swellWaveItem);
-
-                i++;
-                if (x + Di > 180) {
-                    skipped = 180 - x;
-                }
-            }
-
-            int skip = Di - 1 - skipped;
-
-            for (int x = -179 + skip; x <= xMax && i < Ni; x+=Di)
-            {
-                double h = sWvHt[i][j];
-                if (h == 0) {
-                    i++;
-                    continue;
-                }
-                double ang = (sWvDir[i][j]) * M_PI / 180.0;  // angle of arrow with +ve x axis in scene's ref
-                double dx = arrowSize*qCos(ang);         // projection of length of arrow on x - axis (in scene's ref)
-                double dy = arrowSize*qSin(ang);         // projection of length of arrow on y - axis      ,,
-                double xx = x*stepi;   // starting coordinates of the arrow
-                double yy = -toMerc(y)*stepj;
-
-                QGraphicsItem* swellWaveItem = scene->addLine(xx, yy, xx + dx, yy + dy, pen);
-                swellWaveArrowPlot.push_back(swellWaveItem);
-
-                //arrow heads
-                double ax1 = xx + dx - qCos(ang - M_PI / 6) * arrowSize / 5;
-                double ay1 = yy + dy - qSin(ang - M_PI / 6) * arrowSize / 5;
-                double ax2 = xx + dx - qSin(M_PI / 3 - ang) * arrowSize / 5;
-                double ay2 = yy + dy - qCos(M_PI / 3 - ang) * arrowSize / 5;
-
-                swellWaveItem = scene->addLine(xx + dx, yy + dy, ax1, ay1, pen);
-                swellWaveArrowPlot.push_back(swellWaveItem);
-
-                swellWaveItem = scene->addLine(xx + dx, yy + dy, ax2, ay2, pen);
-                swellWaveArrowPlot.push_back(swellWaveItem);
-
-                i++;
-            }
-            j++;
-        }
-    }
-    areInitSwellWaveArrowsDrawn = true;
-}
-
-void MainWindow::drawCurrentArrow(int fc) {
-
-    vector<vector<double>> cSpeed = gridData->getCurrentSpeed(fc);
-    vector<vector<int>> cDir = gridData->getCurrentDir(fc);
-
-    if (cSpeed.size() == 0 || cDir.size() == 0) {
-        return;
-    }
-
-    double Di = gridData->getD();
-    double Dj = gridData->getD();
-    int xMin = gridData->getMinPoint().x();
-    int yMin = gridData->getMinPoint().y();
-    int xMax = gridData->getMaxPoint().x();
-    int yMax = gridData->getMaxPoint().y();
-    int Ni = gridData->getNi();
-    int Nj = gridData->getNj();
-
-    CustomScene* scene = m_pForm->GetGraphicsScene();
-
-    double stepi = scene->stepI();
-    double stepj = scene->stepJ();
-
-    // arrow properties
-    QPen pen = QPen(Qt::white, 1);
-    pen.setCosmetic(true);
-    double arrowSize = stepi;
-
-    if (xMin < xMax)
-    {
-        int j = 0;
-        for (int y = yMin; y <= yMax && j < Nj; y += Dj)
-        {
-            int i = 0;
-            for (int x = xMin; x <= xMax && i < Ni; x += Di)
-            {
-                double vInKnots = 1.94384 * cSpeed[i][j];
-                if (vInKnots == 0) {
-                    i++;
-                    continue;
-                }
-                double ang = (cDir[i][j]) * M_PI / 180.0;  // angle of arrow with +ve x axis in scene's ref
-                double dx = arrowSize * qCos(ang);         // proj of arrow on x - axis (in scene's ref)
-                double dy = arrowSize * qSin(ang);         // proj of arrow on y - axis      ,,
-                double xx = x * stepi;   // starting coordinates of the arrow
-                double yy = -toMerc(y) * stepj;
-
-                QGraphicsItem* currentItem = scene->addLine(xx, yy, xx + dx, yy + dy, pen);
-                currentArrowPlot.push_back(currentItem);
-
-                //arrow heads
-                double ax1 = xx + dx - qCos(ang - M_PI / 6) * arrowSize / 5;
-                double ay1 = yy + dy - qSin(ang - M_PI / 6) * arrowSize / 5;
-                double ax2 = xx + dx - qSin(M_PI / 3 - ang) * arrowSize / 5;
-                double ay2 = yy + dy - qCos(M_PI / 3 - ang) * arrowSize / 5;
-
-                currentItem = scene->addLine(xx + dx, yy + dy, ax1, ay1, pen);
-                currentArrowPlot.push_back(currentItem);
-
-                currentItem = scene->addLine(xx + dx, yy + dy, ax2, ay2, pen);
-                currentArrowPlot.push_back(currentItem);
-
-
-                //barbs
-                int vApprox = (int)(std::floor(vInKnots*10));
-
-                currentItem = scene->addLine(xx, yy, xx + dx, yy + dy, pen);
-                currentArrowPlot.push_back(currentItem);
-
-                double d = arrowSize / 10;
-                double bx = xx + d*qCos(ang);
-                double by = yy + d*qSin(ang);
-                int noOfbarbs = vApprox/5;
-
-                for (int i = 0; i < noOfbarbs; i++)
-                {
-                    QPointF be = barb(ang, arrowSize, true);
-
-                    currentItem = scene->addLine(bx, by, bx + be.x(), by + be.y(), pen);
-                    currentArrowPlot.push_back(currentItem);
-
-                    bx += d*qCos(ang);
-                    by += d*qSin(ang);
-                }
-                i++;
-            }
-            j++;
-        }
-    }
-
-    else
-    {
-        int j = 0;
-        for (int y = yMin; y <= yMax && j < Nj; y += Dj)
-        {
-            int i = 0;
-            int skipped = 0;
-            for (int x = xMin; x <= 180 && i < Ni; x += Di)
-            {
-                double vInKnots = 1.94384 * (cSpeed[i][j]);
-                if (vInKnots == 0) {
-                    i++;
-                    continue;
-                }
-                double ang = (cDir[i][j]) * M_PI / 180.0;   // ang of arrow with +ve x axis in scene's ref
-                double dx = arrowSize*qCos(ang);         // proj of arrow on x - axis (in scene's ref)
-                double dy = arrowSize*qSin(ang);         // proj of arrow on y - axis      ,,
-                double xx = x*stepi;                     // starting coordinates of the arrow
-                double yy = -toMerc(y)*stepj;
-
-                QGraphicsItem* currentItem = scene->addLine(xx, yy, xx + dx, yy + dy, pen);
-                currentArrowPlot.push_back(currentItem);
-
-
-                //arrow heads
-                double ax1 = xx + dx - qCos(ang - M_PI / 6) * arrowSize / 5;
-                double ay1 = yy + dy - qSin(ang - M_PI / 6) * arrowSize / 5;
-                double ax2 = xx + dx - qSin(M_PI / 3 - ang) * arrowSize / 5;
-                double ay2 = yy + dy - qCos(M_PI / 3 - ang) * arrowSize / 5;
-
-                currentItem = scene->addLine(xx + dx, yy + dy, ax1, ay1, pen);
-                currentArrowPlot.push_back(currentItem);
-
-                currentItem = scene->addLine(xx + dx, yy + dy, ax2, ay2, pen);
-                currentArrowPlot.push_back(currentItem);
-
-                //barbs
-                int vApprox = (int)(std::floor(vInKnots*10));
-
-                currentItem = scene->addLine(xx, yy, xx + dx, yy + dy, pen);
-                currentArrowPlot.push_back(currentItem);
-
-                double d = arrowSize / 10;
-                double bx = xx + d*qCos(ang);
-                double by = yy + d*qSin(ang);
-                int noOfbarbs = vApprox/5;
-
-                for (int i = 0; i < noOfbarbs; i++)
-                {
-                    QPointF be = barb(ang, arrowSize, true);
-
-                    currentItem = scene->addLine(bx, by, bx + be.x(), by + be.y(), pen);
-                    currentArrowPlot.push_back(currentItem);
-
-                    bx += d*qCos(ang);
-                    by += d*qSin(ang);
-                }
-
-                i++;
-                if (x + Di > 180) {
-                    skipped = 180 - x;
-                }
-            }
-
-            int skip = Di - 1 - skipped;
-
-            for (int x = -179 + skip; x <= xMax && i < Ni; x += Di)
-            {
-                double vInKnots = 1.94384 * (cSpeed[i][j]);
-                if (vInKnots == 0) {
-                    i++;
-                    continue;
-                }
-                double ang = (cDir[i][j]) * M_PI / 180.0;  // angle of arrow with +ve x axis in scene's ref
-                double dx = arrowSize*qCos(ang);         // projection of length of arrow on x - axis (in scene's ref)
-                double dy = arrowSize*qSin(ang);         // projection of length of arrow on y - axis      ,,
-                double xx = x*stepi;   // starting coordinates of the arrow
-                double yy = -toMerc(y)*stepj;
-
-                QGraphicsItem* currentItem = scene->addLine(xx, yy, xx + dx, yy + dy, pen);
-                currentArrowPlot.push_back(currentItem);
-
-
-                //arrow heads
-                double ax1 = xx + dx - qCos(ang - M_PI / 6) * arrowSize / 5;
-                double ay1 = yy + dy - qSin(ang - M_PI / 6) * arrowSize / 5;
-                double ax2 = xx + dx - qSin(M_PI / 3 - ang) * arrowSize / 5;
-                double ay2 = yy + dy - qCos(M_PI / 3 - ang) * arrowSize / 5;
-
-                currentItem = scene->addLine(xx + dx, yy + dy, ax1, ay1, pen);
-                currentArrowPlot.push_back(currentItem);
-
-                currentItem = scene->addLine(xx + dx, yy + dy, ax2, ay2, pen);
-                currentArrowPlot.push_back(currentItem);
-
-                //barbs
-                int vApprox = (int)(std::floor(vInKnots*10));
-
-                currentItem = scene->addLine(xx, yy, xx + dx, yy + dy, pen);
-                currentArrowPlot.push_back(currentItem);
-
-                double d = arrowSize / 10;
-                double bx = xx + d*qCos(ang);
-                double by = yy + d*qSin(ang);
-                int noOfbarbs = vApprox/5;
-
-                for (int i = 0; i < noOfbarbs; i++)
-                {
-                    QPointF be = barb(ang, arrowSize, true);
-
-                    currentItem = scene->addLine(bx, by, bx + be.x(), by + be.y(), pen);
-                    currentArrowPlot.push_back(currentItem);
-
-                    bx += d*qCos(ang);
-                    by += d*qSin(ang);
-                }
-
-                i++;
-            }
-            j++;
-        }
-    }
-    areInitCurrentArrowsDrawn = true;
-}
-
-
 

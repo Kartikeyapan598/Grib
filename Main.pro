@@ -9,40 +9,48 @@ CONFIG += c++17
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-    src/Square.cpp \
     src/data.cpp \
     src/form.cpp \
     src/griddata.cpp \
+    src/gridder.cpp \
+    src/infopanel.cpp \
     src/main.cpp \
     src/mainwindow.cpp \
     src/plotter.cpp \
-    src/points.cpp \
     src/rendertypes.cpp \
     src/customview.cpp \
     src/customscene.cpp \
     src/DownloadManager.cpp \
-    src/textprogressbar.cpp
+    src/textprogressbar.cpp \
+    src/csvroutes.cpp \
+#    src/uploadmanager.cpp \
+#    src/auth.cpp
 
 HEADERS += \
-    src/Square.h \
     src/Utils.h \
     src/data.h \
     src/form.h \
     src/griddata.h \
+    src/gridder.h \
+    src/infopanel.h \
     src/mainwindow.h \
     src/plotter.h \
-    src/points.h \
     src/rendertypes.h \
     src/customview.h \
     src/customscene.h \
     src/DownloadManager.h \
-    src/textprogressbar.h
+    src/textprogressbar.h \
+    src/csvroutes.h \
+#    src/uploadmanager.h \
+#    src/auth.h
 
 
 FORMS += \
     src/form.ui \
+    src/infopanel.ui \
     src/mainwindow.ui \
     src/rendertypes.ui
+#    src/auth.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

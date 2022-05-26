@@ -39,10 +39,8 @@
     <property name="title">
      <string>RenderOp</string>
     </property>
-    <addaction name="actionViewPort"/>
-    <addaction name="actionDrawSquare"/>
     <addaction name="actionRenderTypes"/>
-    <addaction name="actionDraw_Circle"/>
+    <addaction name="actionInfo_Panel"/>
    </widget>
    <widget class="QMenu" name="menuAbout">
     <property name="title">
@@ -128,6 +126,36 @@
   <action name="actionUpload_CSV">
    <property name="text">
     <string>Upload CSV</string>
+   </property>
+  </action>
+  <action name="actionNext_forecast">
+   <property name="text">
+    <string>Next forecast</string>
+   </property>
+  </action>
+  <action name="actionPrevious_forecast">
+   <property name="text">
+    <string>Previous forecast</string>
+   </property>
+  </action>
+  <action name="actionNext_day_forecast">
+   <property name="text">
+    <string>Next day forecast</string>
+   </property>
+  </action>
+  <action name="actionPrevious_day_forecast">
+   <property name="text">
+    <string>Previous day forecast</string>
+   </property>
+  </action>
+  <action name="actionDownload_Files">
+   <property name="text">
+    <string>Download Files</string>
+   </property>
+  </action>
+  <action name="actionInfo_Panel">
+   <property name="text">
+    <string>Info Panel</string>
    </property>
   </action>
  </widget>

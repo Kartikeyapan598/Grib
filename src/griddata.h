@@ -36,6 +36,8 @@ public:
     int getD  () const { return Di; }
     int getNi () const { return Ni; }
     int getNj () const { return Nj; }
+    time_t getRefDate () const { return refDate; }
+    int getNbForecasts() const { return nbForecasts; }
 
 private:
     static GridData* m_gridDataInstance;
@@ -69,7 +71,6 @@ private:
     unordered_map<int, vector<vector<double>>>  currentSpeed;
     unordered_map<int, vector<vector<int>>>     currentDir;
 
-    const int currentRotationFactor = 20;
 
 };
 

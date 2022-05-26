@@ -3,6 +3,7 @@
 CustomView::CustomView(QWidget* parent)
     : QGraphicsView(parent)
 {
+    setMouseTracking(true);
 }
 
 void CustomView::resizeEvent(QResizeEvent *event)

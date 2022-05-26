@@ -19,6 +19,7 @@ public :
     CustomScene(QWidget* parent = nullptr);
 
     void    mousePressEvent (QGraphicsSceneMouseEvent* e) override;
+    void    mouseMoveEvent(QGraphicsSceneMouseEvent* e) override;
     void    clearScene ();
     void    clearInitialGrid();
 

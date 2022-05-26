@@ -11,12 +11,11 @@ RenderTypes::RenderTypes(QWidget *parent) :
 
     m_temp = false;
     m_weather = false;
-//    ui->checkBox->setChecked(true);
-//    ui->checkBox_2->setChecked(false);
-//    ui->checkBox_3->setChecked(false);
+
     ui->WindSpeedColorBox->setChecked(true);
     ui->WindBarbsBox->setChecked(true);
-    this->setFixedSize(510, 530);
+
+    this->setFixedSize(430, 400);
     this->setWindowTitle(QString("Select Render Types"));
 }
 
@@ -25,58 +24,12 @@ RenderTypes::~RenderTypes()
     delete ui;
 }
 
-//void RenderTypes::on_checkBox_clicked() // For Wind
-//{
-//    m_wind = !m_wind;
-//    MainWindow::GetMainWindowInstance().ShowDock1(m_wind);
-//    // Show data for wind
-//    return;
-//}
-
-//void RenderTypes::on_checkBox_2_clicked()   // For Weather
-//{
-//    m_weather = !m_weather;
-//    MainWindow::GetMainWindowInstance().ShowDock2(m_weather);
-//    return;
-//}
-
-//void RenderTypes::on_checkBox_3_clicked()   // For Temp
-//{
-//    m_temp = !m_temp;
-//    MainWindow::GetMainWindowInstance().ShowDock3(m_temp);
-//    return;
-//}
 
 void RenderTypes::on_pushButton_clicked()
 {
     this->close();
 }
 
-
-
-//void RenderTypes::on_WaveGroupBox_clicked()
-//{
-//    MainWindow& instance = MainWindow::GetMainWindowInstance();
-//    if(ui->WaveGroupBox->isChecked())
-//    {
-//        instance.addWaveSigHtColorPlot(0);
-//        instance.addWindWaveArrowPlot(0);
-//        instance.addSwellWaveArrowPlot(0);
-
-//        ui->SHeightWindSwellBox->setChecked(true);
-//        ui->WindWaveDirectionBox->setChecked(true);
-//        ui->SwellWaveDirectionBox->setChecked(true);
-//    }
-//    else
-//    {
-//        instance.removeSwellWaveArrowPlot();
-//        instance.removeWindWaveArrowPlot();
-//        instance.removeWaveSigHtColorPlot();
-//        instance.removeWindWaveHtColorPlot();
-//        instance.removeSwellWaveHtColorPlot();
-//    }
-//    return;
-//}
 
 bool RenderTypes::MultiHeightBoxWarning(bool a, bool b, bool c)
 {
@@ -90,76 +43,77 @@ bool RenderTypes::MultiHeightBoxWarning(bool a, bool b, bool c)
         ui->SwellWaveHeightBox->setChecked(false);
         ui->WindWaveHeightBox->setChecked(false);
     }
+
     return val;
 }
 
 void RenderTypes::on_SHeightWindSwellBox_clicked()
 {
     MainWindow& instance = MainWindow::GetMainWindowInstance();
-    if(ui->SHeightWindSwellBox->isChecked())
+
+    if (ui->SHeightWindSwellBox->isChecked())
     {
-        instance.removeWindWaveHtColorPlot(0);
-        instance.removeSwellWaveHtColorPlot(0);
-        instance.removeWindColorPlot(0);
+        if (instance.windWaveHtOnScene())
+            instance.getPlotter(instance.getForecastPtr()).removeWindWaveHtColorPlot();
+
+        if (instance.swellWaveHtOnScene())
+            instance.getPlotter(instance.getForecastPtr()).removeSwellWaveHtColorPlot();
+
+        if (instance.windSpeedOnScene())
+            instance.getPlotter(instance.getForecastPtr()).removeWindColorPlot();
+
+        instance.setWindWaveHtOnScene(false);
+        instance.setSwellWaveHtOnScene(false);
+        instance.setWindSpeedOnScene(false);
+
         ui->WindWaveHeightBox->setChecked(false);
         ui->WindSpeedColorBox->setChecked(false);
         ui->SwellWaveHeightBox->setChecked(false);
 
-        instance.addWaveSigHtColorPlot(0);
+        instance.getPlotter(instance.getForecastPtr()).addWaveSigHtColorPlot();
+        instance.setWaveSigHtOnScene(true);
     }
     else
     {
-        instance.removeWaveSigHtColorPlot(0);
+        instance.getPlotter(instance.getForecastPtr()).removeWaveSigHtColorPlot();
+        instance.setWaveSigHtOnScene(false);
     }
     return;
 
-//    bool windPlusSwell = ui->SHeightWindSwellBox->isChecked();
-//    bool swellHeight = ui->SwellWaveHeightBox->isChecked();
-//    bool windHeight = ui->WindWaveHeightBox->isChecked();
-
-//    if(!MultiHeightBoxWarning(windPlusSwell, swellHeight, windHeight) && windPlusSwell == true)
-//    {
-//        // Draw wave height Swell + Wind
-//    }
-//    if(!windPlusSwell)
-//    {
-//        // Clear
-//    }
 }
-
 
 void RenderTypes::on_SwellWaveHeightBox_clicked()
 {
     MainWindow& instance = MainWindow::GetMainWindowInstance();
     if(ui->SwellWaveHeightBox->isChecked())
     {
-        instance.removeWindWaveHtColorPlot(0);
-        instance.removeWaveSigHtColorPlot(0);
-        instance.removeWindColorPlot(0);
+        if (instance.windWaveHtOnScene())
+            instance.getPlotter(instance.getForecastPtr()).removeWindWaveHtColorPlot();
+
+        if (instance.waveSigHtOnScene())
+            instance.getPlotter(instance.getForecastPtr()).removeWaveSigHtColorPlot();
+
+        if (instance.windSpeedOnScene())
+            instance.getPlotter(instance.getForecastPtr()).removeWindColorPlot();
+
+        instance.setWindWaveHtOnScene(false);
+        instance.setWaveSigHtOnScene(false);
+        instance.setWindSpeedOnScene(false);
 
         ui->SHeightWindSwellBox->setChecked(false);
         ui->WindWaveHeightBox->setChecked(false);
         ui->WindSpeedColorBox->setChecked(false);
 
-        instance.addSwellWaveHtColorPlot(0);
+        instance.getPlotter(instance.getForecastPtr()).addSwellWaveHtColorPlot();
+        instance.setSwellWaveHtOnScene(true);
     }
     else
     {
-        instance.removeSwellWaveHtColorPlot(0);
+        instance.getPlotter(instance.getForecastPtr()).removeSwellWaveHtColorPlot();
+        instance.setSwellWaveHtOnScene(false);
     }
     return;
-//    bool windPlusSwell = ui->SHeightWindSwellBox->isChecked();
-//    bool swellHeight = ui->SwellWaveHeightBox->isChecked();
-//    bool windHeight = ui->WindWaveHeightBox->isChecked();
 
-//    if(!MultiHeightBoxWarning(windPlusSwell, swellHeight, windHeight) && swellHeight == true)
-//    {
-//        // Draw Swell height
-//    }
-//    if(!swellHeight)
-//    {
-//        // clear scene
-//    }
 }
 
 void RenderTypes::on_WindWaveHeightBox_clicked()
@@ -167,46 +121,49 @@ void RenderTypes::on_WindWaveHeightBox_clicked()
     MainWindow& instance = MainWindow::GetMainWindowInstance();
     if(ui->WindWaveHeightBox->isChecked())
     {
-        instance.removeWaveSigHtColorPlot(0);
-        instance.removeWindColorPlot(0);
-        instance.removeSwellWaveHtColorPlot(0);
+        if (instance.waveSigHtOnScene())
+            instance.getPlotter(instance.getForecastPtr()).removeWaveSigHtColorPlot();
+
+        if (instance.windSpeedOnScene())
+            instance.getPlotter(instance.getForecastPtr()).removeWindColorPlot();
+
+        if (instance.swellWaveHtOnScene())
+            instance.getPlotter(instance.getForecastPtr()).removeSwellWaveHtColorPlot();
+
+        instance.setWaveSigHtOnScene(false);
+        instance.setSwellWaveHtOnScene(false);
+        instance.setWindSpeedOnScene(false);
+
         ui->SHeightWindSwellBox->setChecked(false);
         ui->SwellWaveHeightBox->setChecked(false);
         ui->WindSpeedColorBox->setChecked(false);
 
-        instance.addWindWaveHtColorPlot(0);
+        instance.getPlotter(instance.getForecastPtr()).addWindWaveHtColorPlot();
+        instance.setWindWaveHtOnScene(true);
     }
     else
     {
-        instance.removeWindWaveHtColorPlot(0);
+        instance.getPlotter(instance.getForecastPtr()).removeWindWaveHtColorPlot();
+        instance.setWindWaveHtOnScene(false);
     }
     return;
-//    bool windPlusSwell = ui->SHeightWindSwellBox->isChecked();
-//    bool swellHeight = ui->SwellWaveHeightBox->isChecked();
-//    bool windHeight = ui->WindWaveHeightBox->isChecked();
 
-//    if(!MultiHeightBoxWarning(windPlusSwell, swellHeight, windHeight) && windHeight == true)
-//    {
-//        // Draw Wind Wave height
-//    }
-//    if(!windHeight)
-//    {
-//        // Clear
-//        CreateMessageBoxInfo(NULL, "HAHA", "No Message");
-//    }
 }
 
 
 void RenderTypes::on_CurrentBox_clicked()
 {
     MainWindow& instance = MainWindow::GetMainWindowInstance();
+
     if(ui->CurrentBox->isChecked())
     {
-        instance.addCurrentArrowPlot(0);
+        instance.getPlotter(instance.getForecastPtr()).addCurrentArrowPlot();
+        instance.setCurrentArrowsOnScene(true);
     }
     else
     {
-        instance.removeCurrentArrowPlot(0);
+        instance.getPlotter(instance.getForecastPtr()).removeCurrentArrowPlot();
+        instance.setCurrentArrowsOnScene(false);
     }
     return;
 }
@@ -217,11 +174,13 @@ void RenderTypes::on_SwellWaveDirectionBox_clicked()
     MainWindow& instance = MainWindow::GetMainWindowInstance();
     if(ui->SwellWaveDirectionBox->isChecked())
     {
-        instance.addSwellWaveArrowPlot(0);
+        instance.getPlotter(instance.getForecastPtr()).addSwellWaveArrowPlot();
+        instance.setSwellWaveArrowsOnScene(true);
     }
     else
     {
-        instance.removeSwellWaveArrowPlot(0);
+        instance.getPlotter(instance.getForecastPtr()).removeSwellWaveArrowPlot();
+        instance.setSwellWaveArrowsOnScene(false);
     }
     return;
 }
@@ -232,11 +191,13 @@ void RenderTypes::on_WindWaveDirectionBox_clicked()
     MainWindow& instance = MainWindow::GetMainWindowInstance();
     if(ui->WindWaveDirectionBox->isChecked())
     {
-        instance.addWindWaveArrowPlot(0);
+        instance.getPlotter(instance.getForecastPtr()).addWindWaveArrowPlot();
+        instance.setWindWaveArrowsOnScene(true);
     }
     else
     {
-        instance.removeWindWaveArrowPlot(0);
+        instance.getPlotter(instance.getForecastPtr()).removeWindWaveArrowPlot();
+        instance.setWindWaveArrowsOnScene(false);
     }
 }
 
@@ -246,18 +207,30 @@ void RenderTypes::on_WindSpeedColorBox_clicked()
     MainWindow& instance = MainWindow::GetMainWindowInstance();
     if(ui->WindSpeedColorBox->isChecked())
     {
-        instance.removeWindWaveHtColorPlot(0);
-        instance.removeWaveSigHtColorPlot(0);
-        instance.removeSwellWaveHtColorPlot(0);
+        if (instance.windWaveArrowsOnScene())
+            instance.getPlotter(instance.getForecastPtr()).removeWindWaveHtColorPlot();
+
+        if (instance.waveSigHtOnScene())
+            instance.getPlotter(instance.getForecastPtr()).removeWaveSigHtColorPlot();
+
+        if (instance.swellWaveHtOnScene())
+            instance.getPlotter(instance.getForecastPtr()).removeSwellWaveHtColorPlot();
+
+        instance.setWaveSigHtOnScene(false);
+        instance.setSwellWaveHtOnScene(false);
+        instance.setWindWaveHtOnScene(false);
+
         ui->SHeightWindSwellBox->setChecked(false);
         ui->SwellWaveHeightBox->setChecked(false);
         ui->WindWaveHeightBox->setChecked(false);
 
-        instance.addWindColorPlot(0);
+        instance.getPlotter(instance.getForecastPtr()).addWindColorPlot();
+        instance.setWindSpeedOnScene(true);
     }
     else
     {
-        instance.removeWindColorPlot(0);
+        instance.getPlotter(instance.getForecastPtr()).removeWindColorPlot();
+        instance.setWindSpeedOnScene(false);
     }
 }
 
@@ -268,11 +241,31 @@ void RenderTypes::on_WindBarbsBox_clicked()
     if(ui->WindBarbsBox->isChecked())
     {
 
-        instance.addWindArrowPlot(0);
+        instance.getPlotter(instance.getForecastPtr()).addWindArrowPlot();
+        instance.setWindArrowsOnScene(true);
     }
     else
     {
-        instance.removeWindArrowPlot(0);
+        instance.getPlotter(instance.getForecastPtr()).removeWindArrowPlot();
+        instance.setWindArrowsOnScene(false);
+    }
+}
+
+
+
+
+void RenderTypes::on_IsobarsBox_clicked()
+{
+    MainWindow& instance = MainWindow::GetMainWindowInstance();
+    if(ui->IsobarsBox->isChecked())
+    {
+        instance.getPlotter(instance.getForecastPtr()).addIsobarPlot();
+        instance.setIsobarsOnScene(true);
+    }
+    else
+    {
+        instance.getPlotter(instance.getForecastPtr()).removeIsobarPlot();
+        instance.setIsobarsOnScene(false);
     }
 }
 

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>517</width>
-    <height>663</height>
+    <width>434</width>
+    <height>391</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,15 +17,15 @@
    <item>
     <widget class="QGroupBox" name="groupBox">
      <property name="title">
-      <string>Types</string>
+      <string/>
      </property>
      <widget class="QGroupBox" name="WaveGroupBox">
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>90</y>
-        <width>475</width>
-        <height>341</height>
+        <y>80</y>
+        <width>391</width>
+        <height>221</height>
        </rect>
       </property>
       <property name="title">
@@ -34,10 +34,10 @@
       <widget class="QWidget" name="layoutWidget">
        <property name="geometry">
         <rect>
-         <x>40</x>
-         <y>50</y>
-         <width>401</width>
-         <height>271</height>
+         <x>20</x>
+         <y>30</y>
+         <width>357</width>
+         <height>175</height>
         </rect>
        </property>
        <layout class="QVBoxLayout" name="verticalLayout">
@@ -53,32 +53,26 @@
           <property name="title">
            <string>Swell Wave</string>
           </property>
-          <widget class="QWidget" name="layoutWidget">
-           <property name="geometry">
-            <rect>
-             <x>20</x>
-             <y>50</y>
-             <width>251</width>
-             <height>28</height>
-            </rect>
-           </property>
-           <layout class="QHBoxLayout" name="horizontalLayout">
-            <item>
-             <widget class="QCheckBox" name="SwellWaveHeightBox">
-              <property name="text">
-               <string>Swell Height</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QCheckBox" name="SwellWaveDirectionBox">
-              <property name="text">
-               <string>Swell Direction</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </widget>
+          <layout class="QFormLayout" name="formLayout">
+           <item row="0" column="0">
+            <layout class="QHBoxLayout" name="horizontalLayout">
+             <item>
+              <widget class="QCheckBox" name="SwellWaveHeightBox">
+               <property name="text">
+                <string>Swell Height</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="SwellWaveDirectionBox">
+               <property name="text">
+                <string>Swell Direction</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+          </layout>
          </widget>
         </item>
         <item>
@@ -86,32 +80,26 @@
           <property name="title">
            <string>Wind Wave</string>
           </property>
-          <widget class="QWidget" name="layoutWidget">
-           <property name="geometry">
-            <rect>
-             <x>10</x>
-             <y>40</y>
-             <width>335</width>
-             <height>28</height>
-            </rect>
-           </property>
-           <layout class="QHBoxLayout" name="horizontalLayout_2">
-            <item>
-             <widget class="QCheckBox" name="WindWaveHeightBox">
-              <property name="text">
-               <string>Wind Wave Height</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QCheckBox" name="WindWaveDirectionBox">
-              <property name="text">
-               <string>Wind Wave Direction</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </widget>
+          <layout class="QFormLayout" name="formLayout_2">
+           <item row="0" column="0">
+            <layout class="QHBoxLayout" name="horizontalLayout_2">
+             <item>
+              <widget class="QCheckBox" name="WindWaveHeightBox">
+               <property name="text">
+                <string>Wind Wave Height</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="WindWaveDirectionBox">
+               <property name="text">
+                <string>Wind Wave Direction</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+          </layout>
          </widget>
         </item>
        </layout>
@@ -120,22 +108,22 @@
      <widget class="QCheckBox" name="CurrentBox">
       <property name="geometry">
        <rect>
-        <x>10</x>
-        <y>430</y>
+        <x>30</x>
+        <y>310</y>
         <width>118</width>
         <height>23</height>
        </rect>
       </property>
       <property name="text">
-       <string>Show Current</string>
+       <string>Current Arrows</string>
       </property>
      </widget>
      <widget class="QGroupBox" name="groupBox_2">
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>30</y>
-        <width>471</width>
+        <y>10</y>
+        <width>391</width>
         <height>61</height>
        </rect>
       </property>
@@ -169,13 +157,35 @@
        </property>
       </widget>
      </widget>
-    </widget>
-   </item>
-   <item>
-    <widget class="QPushButton" name="pushButton">
-     <property name="text">
-      <string>OK</string>
-     </property>
+     <widget class="QPushButton" name="pushButton">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>340</y>
+        <width>381</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>OK</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="IsobarsBox">
+      <property name="geometry">
+       <rect>
+        <x>200</x>
+        <y>310</y>
+        <width>92</width>
+        <height>23</height>
+       </rect>
+      </property>
+      <property name="cursor">
+       <cursorShape>ArrowCursor</cursorShape>
+      </property>
+      <property name="text">
+       <string>Isobars</string>
+      </property>
+     </widget>
     </widget>
    </item>
   </layout>

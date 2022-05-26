@@ -47,6 +47,8 @@ private slots:
 
     void on_WindBarbsBox_clicked();
 
+    void on_IsobarsBox_clicked();
+
 private:
 
     Ui::RenderTypes *ui;

@@ -1,11 +1,13 @@
 #include "customscene.h"
+#include "infopanel.h"
+#include "ui_infopanel.h"
 #include <QGraphicsSvgItem>
 
 CustomScene::CustomScene(QWidget* parent)
     : QGraphicsScene(parent)
 {
 
-    QGraphicsSvgItem *map = new QGraphicsSvgItem("/home/pr6khar/Xtreme/Projects/Main/Grib/src/Resrc/world_map.svg");
+    QGraphicsSvgItem *map = new QGraphicsSvgItem("/home/pr6khar/Xtreme/MainWithForecasts/Grib/src/Resrc/world_map.svg");
 
     QRectF mapRect = map->boundingRect();
     mapWidth = mapRect.width();
@@ -65,59 +67,48 @@ CustomScene::CustomScene(QWidget* parent)
 
 void CustomScene::mousePressEvent(QGraphicsSceneMouseEvent *e)
 {
-    QPointF p = e->scenePos();
 
-    // lon, lat at (x, y)
-    QPointF ll;
-    ll.setX((p.x() - zero.x())*(360.0/mapWidth));
-
-    float lat_mercInv = -(p.y() - zero.y())/stepJ();
-    ll.setY(fromMerc(lat_mercInv));
-
-    if (e->button() == Qt::LeftButton)
-    {
-        double rad = 1;
-        QGraphicsEllipseItem* el = addEllipse(p.x() - rad, p.y() - rad, rad*2.0, rad*2.0,
-                                              QPen(Qt::red), QBrush(Qt::SolidPattern));
-        el->setZValue(std::numeric_limits<qreal>::max()); // on top of every item
-
-        m_sceneItems.push_back(el);
-
-        QString s = "(" + QString::number(ll.x()) + ", " + QString::number(ll.y()) + ")"; // (lon, lat)
-
-        QGraphicsTextItem* item = new QGraphicsTextItem(s);
-        item->setPos(p.x() + 2, p.y() + 2);
-
-        m_sceneItems.push_back(item);
-
-        if (!m_wayPointCoord.empty())
-            removeItem(m_wayPointCoord.back());
-
-        m_wayPointCoord.push_back(item);
-        addItem(m_wayPointCoord.back());
-
-        if (!m_lastPoint.isNull())
-        {
-            QGraphicsLineItem* item2 = addLine(m_lastPoint.x(), m_lastPoint.y(), p.x(), p.y(), QPen(Qt::green));
-            item2->setZValue(std::numeric_limits<qreal>::max()); // on top of every item
-            m_sceneItems.push_back(item2);
-        }
-        m_lastPoint = p;
-    }
-    else
-    {
-        // Waypoints table on right click
-        QMessageBox msg;
-        msg.setWindowTitle(QString("WayPoints"));
-        QString str = "";
-
-        for (int i = 0; i < m_wayPointCoord.size(); i++)
-            str+= "Waypoint " + QString::number(i + 1) + " :" + m_wayPointCoord.at(i)->toPlainText() + "\n";
-        msg.setText(str);
-        msg.exec();
-    }
 }
 
+void CustomScene::mouseMoveEvent(QGraphicsSceneMouseEvent* e)
+{
+    InfoPanel &ip_instance = InfoPanel::getInfoPanelInstance();
+
+    double lat = -fromMerc(e->scenePos().y() / stepJ());
+    double lon = e->scenePos().x() / stepI();
+
+    char latDir = 'N';
+    char lonDir = 'E';
+
+    if (lat < 0) {
+        latDir = 'S';
+    }
+    if (lon < 0) {
+        lonDir = 'W';
+    }
+
+    uint latDeg = std::abs((int)(lat));
+    uint lonDeg = std::abs((int)(lon));
+
+    uint latMin = (int)((std::abs(lat) - latDeg) * 60);
+    uint lonMin = (int)((std::abs(lon) - lonDeg) * 60);
+
+    uint latSec = (int)(((std::abs(lat) - latDeg) * 60 - latMin) * 60);
+    uint lonSec = (int)(((std::abs(lon) - lonDeg) * 60 - lonMin) * 60);
+
+    QString latStr = QString::number(latDeg) + tr("°")
+                    + QString::number(latMin) + "'"
+                    + QString::number(latSec) + "\""
+                    + latDir;
+
+    QString lonStr = QString::number(lonDeg) + tr("°")
+                    + QString::number(lonMin) + "'"
+                    + QString::number(lonSec) + "\""
+                    + lonDir;
+
+    ip_instance.ui->latInfoLabel->setText(latStr);
+    ip_instance.ui->lonInfoLabel->setText(lonStr);
+}
 void CustomScene::clearScene ()
 {
     for (int i = 0; i < m_sceneItems.size(); ++i)
@@ -197,7 +188,7 @@ void CustomScene::initWaveColourScale ()
     std::vector<int> v ={0, 1, 2, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 70, 80, 90, 100, 120, 140, 160, 180, 200};
 
     fillColorMap(m_wvCol, v);
-    m_wvCol[-1] = QColor(0, 0, 0);
+    m_wvCol[-1] = QColor(40, 140, 255);
 }
 
 

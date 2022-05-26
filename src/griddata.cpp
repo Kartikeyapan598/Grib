@@ -41,10 +41,6 @@ void GridData::decodeWindSpeed(int fc, int* fd)
             windSpeed[fc][i][j] = value;
         }
     }
-
-//    for (int i = 0; i < Ni; i++) {
-//        reverse(windSpeed[fc][i].begin(), windSpeed[fc][i].end());
-//    }
 }
 
 void GridData::decodeWindDir(int fc, int* fd)
@@ -67,10 +63,6 @@ void GridData::decodeWindDir(int fc, int* fd)
             windDir[fc][i][j] = value;
         }
     }
-
-//    for (int i = 0; i < Ni; i++) {
-//        reverse(windDir[fc][i].begin(), windDir[fc][i].end());
-//    }
 }
 
 void GridData::decodePressure(int fc, int* fd)
@@ -91,12 +83,8 @@ void GridData::decodePressure(int fc, int* fd)
 
     //        double value = t * (15000 / 255.0);
             double value = t;
-            pressure[fc][i][j] = value;
+            pressure[fc][i][j] = value * 10;
         }
-    }
-
-    for (int i = 0; i < Ni; i++) {
-        reverse(pressure[fc][i].begin(), pressure[fc][i].end());
     }
 }
 
@@ -128,11 +116,6 @@ void GridData::decodeWaveSigHeight(int fc, int* fd)
             waveSigHeight[fc][i][j] = waveSigHeightTemp[i + j*Ni];
         }
     }
-
-
-//    for (int i = 0; i < Ni; i++) {
-//        reverse(waveSigHeight[fc][i].begin(), waveSigHeight[fc][i].end());
-//    }
 }
 
 void GridData::decodeWindWaveHeight(int fc, int* fd)
@@ -154,10 +137,6 @@ void GridData::decodeWindWaveHeight(int fc, int* fd)
             windWaveHeight[fc][i][j] = value;
         }
     }
-
-//    for (int i = 0; i < Ni; i++) {
-//        reverse(windWaveHeight[fc][i].begin(), windWaveHeight[fc][i].end());
-//    }
 }
 
 void GridData::decodeWindWaveDir(int fc, int* fd)
@@ -179,10 +158,6 @@ void GridData::decodeWindWaveDir(int fc, int* fd)
             windWaveDir[fc][i][j] = value;
         }
     }
-
-//    for (int i = 0; i < Ni; i++) {
-//        reverse(windWaveDir[fc][i].begin(), windWaveDir[fc][i].end());
-//    }
 }
 
 void GridData::decodeWindWavePeriod(int fc, int* fd)
@@ -235,10 +210,6 @@ void GridData::decodeWindWavePeriod(int fc, int* fd)
             windWavePer[fc][i][j] = windWavePerTemp[i + j*Ni];
         }
     }
-
-//    for (int i = 0; i < Ni; i++) {
-//        reverse(windWavePer[fc][i].begin(), windWavePer[fc][i].end());
-//    }
 }
 
 void GridData::decodeSwellWaveHeight(int fc, int* fd)
@@ -260,10 +231,6 @@ void GridData::decodeSwellWaveHeight(int fc, int* fd)
             swellWaveHeight[fc][i][j] = value;
         }
     }
-
-//    for (int i = 0; i < Ni; i++) {
-//        reverse(swellWaveHeight[fc][i].begin(), swellWaveHeight[fc][i].end());
-//    }
 }
 
 void GridData::decodeSwellWaveDir(int fc, int* fd) // 1 byte = 1 cell's Swell Wave Dir. value
@@ -285,10 +252,6 @@ void GridData::decodeSwellWaveDir(int fc, int* fd) // 1 byte = 1 cell's Swell Wa
             swellWaveDir[fc][i][j] = value;
         }
     }
-
-//    for (int i = 0; i < Ni; i++) {
-//        reverse(swellWaveDir[fc][i].begin(), swellWaveDir[fc][i].end());
-//    }
 }
 
 void GridData::decodeSwellWavePeriod(int fc, int* fd)
@@ -341,10 +304,6 @@ void GridData::decodeSwellWavePeriod(int fc, int* fd)
             swellWavePer[fc][i][j] = swellWavePerTemp[i + j*Ni];
         }
     }
-
-//    for (int i = 0; i < Ni; i++) {
-//        reverse(swellWavePer[fc][i].begin(), swellWavePer[fc][i].end());
-//    }
 }
 
 void GridData::decodeCurrentSpeed(int fc, int* fd)
@@ -368,11 +327,9 @@ void GridData::decodeCurrentSpeed(int fc, int* fd)
             currentSpeed[fc][i][j] = value;
         }
     }
-
-//    for (int i = 0; i < Ni; i++) {
-//        reverse(currentSpeed[fc][i].begin(), currentSpeed[fc][i].end());
-//    }
-
+    for (int i = fc + 1; i < 20 + fc; ++i) {
+        currentSpeed[i] = currentSpeed[fc];
+    }
 }
 
 void GridData::decodeCurrentDir(int fc, int* fd)
@@ -394,12 +351,9 @@ void GridData::decodeCurrentDir(int fc, int* fd)
             currentDir[fc][i][j] = value;
         }
     }
-
-//    for (int i = 0; i < Ni; i++) {
-//        reverse(currentDir[fc][i].begin(), currentDir[fc][i].end());
-//    }
-
-//    rotate(currentDir[fc].begin(), currentDir[fc].begin() + currentDir[fc].size() - currentRotationFactor, currentDir[fc].end());
+    for (int i = fc + 1; i < 20 + fc; ++i) {
+        currentDir[i] = currentDir[fc];
+    }
 }
 
 int GridData::decode(int* fd)
@@ -409,18 +363,20 @@ int GridData::decode(int* fd)
         decodeWindSpeed(i, fd);
         decodeWindDir(i, fd);
 
-//        decodePressure(i, fd);
+        decodePressure(i, fd);
 
         decodeWaveSigHeight(i, fd);
 
         decodeWindWaveHeight(i, fd);
         decodeWindWaveDir(i, fd);
-        decodeWindWavePeriod(i, fd);
+//        decodeWindWavePeriod(i, fd);
 
         decodeSwellWaveHeight(i, fd);
         decodeSwellWaveDir(i, fd);
-        decodeSwellWavePeriod(i, fd);
-
+//        decodeSwellWavePeriod(i, fd);
+    }
+    for (int i = 0; i < nbForecasts; i += 20)
+    {
         decodeCurrentSpeed(i, fd);
         decodeCurrentDir(i, fd);
     }
@@ -496,11 +452,13 @@ int GridData::decode(const char* fname)
         t = 0;
         qInfo() << Dj;
 
-    if (read(fd, &refDate, 8) != 8)
+    if (read(fd, &refDate, sizeof(time_t)) != sizeof(time_t))
     {
         // QMessagebox error
         return -1;
     }
+
+    qInfo() << refDate;
 
     if (read(fd, &nbForecasts, 4) != 4)
     {
@@ -515,4 +473,3 @@ int GridData::decode(const char* fname)
 
     return status;
 }
-
