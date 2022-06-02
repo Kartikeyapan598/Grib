@@ -20,16 +20,15 @@ Form::Form(QWidget *parent, CustomScene* scene)
     m_layout = this->layout();
     m_layout->addWidget(m_view);
 
-
     this->setLayout(m_layout);
 }
 
-void Form::wheelEvent(QWheelEvent *event)
+void Form::wheelEvent (QWheelEvent *event)
 {
     return;
 }
 
-void Form::keyPressEvent(QKeyEvent *event)
+void Form::keyPressEvent (QKeyEvent *event)
 {
     return;
 }

@@ -7,7 +7,8 @@ CustomScene::CustomScene(QWidget* parent)
     : QGraphicsScene(parent)
 {
 
-    QGraphicsSvgItem *map = new QGraphicsSvgItem("/home/pr6khar/Xtreme/MainWithForecasts/Grib/src/Resrc/world_map.svg");
+    QGraphicsSvgItem *map = new QGraphicsSvgItem("/home/pr6khar/Xtreme/MainWithPlotter/Grib/src/Resrc/world_map.svg");
+//    map->set
 
     QRectF mapRect = map->boundingRect();
     mapWidth = mapRect.width();

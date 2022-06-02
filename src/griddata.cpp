@@ -327,7 +327,7 @@ void GridData::decodeCurrentSpeed(int fc, int* fd)
             currentSpeed[fc][i][j] = value;
         }
     }
-    for (int i = fc + 1; i < 20 + fc; ++i) {
+    for (int i = fc + 1; i < nbForecasts; ++i) {
         currentSpeed[i] = currentSpeed[fc];
     }
 }
@@ -351,7 +351,7 @@ void GridData::decodeCurrentDir(int fc, int* fd)
             currentDir[fc][i][j] = value;
         }
     }
-    for (int i = fc + 1; i < 20 + fc; ++i) {
+    for (int i = fc + 1; i < nbForecasts; ++i) {
         currentDir[i] = currentDir[fc];
     }
 }
@@ -375,16 +375,18 @@ int GridData::decode(int* fd)
         decodeSwellWaveDir(i, fd);
 //        decodeSwellWavePeriod(i, fd);
     }
-    for (int i = 0; i < nbForecasts; i += 20)
-    {
-        decodeCurrentSpeed(i, fd);
-        decodeCurrentDir(i, fd);
-    }
+//    for (int i = 0; i < nbForecasts; i += 20)
+//    {
+//        decodeCurrentSpeed(i, fd);
+//        decodeCurrentDir(i, fd);
+//    }
+        decodeCurrentSpeed(0, fd);
+        decodeCurrentDir(0, fd);
 
     return 0;
 }
 
-int GridData::decode(const char* fname)
+int GridData::decode (const char* fname)
 {
     int fd = open(fname, O_RDONLY);
     if (fd < 0)

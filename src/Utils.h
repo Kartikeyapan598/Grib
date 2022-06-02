@@ -194,7 +194,7 @@ inline QVector<QLineF> getIsoLines (bool b1, bool b2, bool b3, bool b4, bool bx,
         q = QPointF(p1.x() + (pr - pr1) * (dx / dpx1), p1.y());
 
         QLineF line (p, q);
-        qInfo() << line;
+
         lines.push_back(line);
     }
 
@@ -212,7 +212,7 @@ inline QVector<QLineF> getIsoLines (bool b1, bool b2, bool b3, bool b4, bool bx,
         q = QPointF(p2.x(), p1.y() + (pr - pr2) * (dy / dpy2));
 
         QLineF line (p, q);
-        qInfo() << line;
+
         lines.push_back(line);
     }
 
@@ -230,7 +230,7 @@ inline QVector<QLineF> getIsoLines (bool b1, bool b2, bool b3, bool b4, bool bx,
         q = QPointF(p2.x(), p1.y() + (pr - pr2) * (dy / dpy2));
 
         QLineF line (p, q);
-        qInfo() << line;
+
         lines.push_back(line);
     }
 
@@ -248,7 +248,7 @@ inline QVector<QLineF> getIsoLines (bool b1, bool b2, bool b3, bool b4, bool bx,
         q = QPointF(p2.x(), p1.y() + (pr - pr2) * (dy / dpy2));
 
         QLineF line (p, q);
-        qInfo() << line;
+
         lines.push_back(line);
     }
 
@@ -274,7 +274,7 @@ inline QVector<QLineF> getIsoLines (bool b1, bool b2, bool b3, bool b4, bool bx,
 
             QLineF line (p, q);
             lines.push_back(line);
-            qInfo() << line;
+
 
             p = QPointF(p1.x() + (pr - pr1) * (dx / dpx1), p1.y());
             q = QPointF(p2.x(), p1.y() + (pr - pr2) * (dy / dpy2));
@@ -297,7 +297,7 @@ inline QVector<QLineF> getIsoLines (bool b1, bool b2, bool b3, bool b4, bool bx,
 
             QLineF line (p, q);
             lines.push_back(line);
-            qInfo() << line;
+
 
             p = QPointF(p1.x() + (pr - pr3) * (dx / dpx2), p3.y());
             q = QPointF(p2.x(), p1.y() + (pr - pr2) * (dy / dpy2));
@@ -323,7 +323,7 @@ inline QVector<QLineF> getIsoLines (bool b1, bool b2, bool b3, bool b4, bool bx,
 
         QLineF line (p, q);
         lines.push_back(line);
-        qInfo() << line;
+
         lines.push_back(line);
     }
 
@@ -342,9 +342,9 @@ inline QVector<QLineF> getIsoLines (bool b1, bool b2, bool b3, bool b4, bool bx,
 
         QLineF line (p, q);
         lines.push_back(line);
-        qInfo() << line;
+
         lines.push_back(line);
-        qInfo() << line;
+
         lines.push_back(line);
     }
 
@@ -363,9 +363,9 @@ inline QVector<QLineF> getIsoLines (bool b1, bool b2, bool b3, bool b4, bool bx,
 
         QLineF line (p, q);
         lines.push_back(line);
-        qInfo() << line;
+
         lines.push_back(line);
-        qInfo() << line;
+
         lines.push_back(line);
     }
 
@@ -384,9 +384,9 @@ inline QVector<QLineF> getIsoLines (bool b1, bool b2, bool b3, bool b4, bool bx,
 
         QLineF line (p, q);
         lines.push_back(line);
-        qInfo() << line;
+
         lines.push_back(line);
-        qInfo() << line;
+
         lines.push_back(line);
     }
 
@@ -412,7 +412,7 @@ inline QVector<QLineF> getIsoLines (bool b1, bool b2, bool b3, bool b4, bool bx,
 
             QLineF line (p, q);
             lines.push_back(line);
-            qInfo() << line;
+
 
             p = QPointF(p1.x() + (pr - pr3) * (dx / dpx2), p3.y());
             q = QPointF(p2.x(), p1.y() + (pr - pr2) * (dy / dpy2));
@@ -435,7 +435,7 @@ inline QVector<QLineF> getIsoLines (bool b1, bool b2, bool b3, bool b4, bool bx,
 
             QLineF line (p, q);
             lines.push_back(line);
-            qInfo() << line;
+
 
             p = QPointF(p1.x() + (pr - pr1) * (dx / dpx1), p1.y());
             q = QPointF(p2.x(), p1.y() + (pr - pr2) * (dy / dpy2));
@@ -460,7 +460,7 @@ inline QVector<QLineF> getIsoLines (bool b1, bool b2, bool b3, bool b4, bool bx,
         q = QPointF(p2.x(), p1.y() + (pr - pr2) * (dy / dpy2));
 
         QLineF line (p, q);
-        qInfo() << line;
+
         lines.push_back(line);
     }
 
@@ -478,7 +478,7 @@ inline QVector<QLineF> getIsoLines (bool b1, bool b2, bool b3, bool b4, bool bx,
         q = QPointF(p2.x(), p1.y() + (pr - pr2) * (dy / dpy2));
 
         QLineF line (p, q);
-        qInfo() << line;
+
         lines.push_back(line);
     }
 
@@ -496,7 +496,7 @@ inline QVector<QLineF> getIsoLines (bool b1, bool b2, bool b3, bool b4, bool bx,
         q = QPointF(p2.x(), p1.y() + (pr - pr2) * (dy / dpy2));
 
         QLineF line (p, q);
-        qInfo() << line;
+
         lines.push_back(line);
     }
 
@@ -514,7 +514,7 @@ inline QVector<QLineF> getIsoLines (bool b1, bool b2, bool b3, bool b4, bool bx,
         q = QPointF(p1.x() + (pr - pr1) * (dx / dpx1), p1.y());
 
         QLineF line (p, q);
-        qInfo() << line;
+
         lines.push_back(line);
     }
 

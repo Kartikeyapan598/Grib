@@ -136,17 +136,17 @@ void MainWindow::on_actionClose_triggered()
 }
 
 
-void MainWindow::on_actionSave_triggered()
-{
-    if(is_saved == false && is_loaded == true)
-    {
-        // To do Save the file
-        is_saved = true;
-    }
-}
+//void MainWindow::on_actionSave_triggered()
+//{
+//    if(is_saved == false && is_loaded == true)
+//    {
+//        // To do Save the file
+//        is_saved = true;
+//    }
+//}
 
 
-void MainWindow::on_actionDownLoad_File_triggered()
+void MainWindow::on_actionDownLoad_File_triggered ()
 {
     //Crashing Why?
     //m_dataManager->append(QStringList("https://www.win-rar.com/fileadmin/winrar-versions/winrar/winrar-x64-611.exe"));
@@ -158,15 +158,10 @@ void MainWindow::on_actionDownLoad_File_triggered()
 }
 
 
-void MainWindow::on_actionUpload_CSV_triggered()
+void MainWindow::on_actionUpload_CSV_triggered ()
 {
     // save the csv as original csv
     QString fName = QFileDialog::getOpenFileName(this, "FileName", path.curr_dir, path.filter);
-
-    // Initialize route
-    routes = new CsvRoutes(fName);
-
-    addCsvRoutePlot();
 
     /* Upload to back-end
      *
@@ -178,19 +173,18 @@ void MainWindow::on_actionUpload_CSV_triggered()
 
 
 
-void MainWindow::addCsvRoutePlot()
+void MainWindow::addCsvRoutePlot (CsvRoute* csv_route, QPen wp_line)
 {
     CustomScene* scene = m_pForm->GetGraphicsScene();
 
     float stepi = scene->stepI();
     float stepj = scene->stepJ();
 
-    std::vector<std::pair<float, float>> route = routes->getOrigCsvRoute();
+    std::vector<std::pair<float, float>> route = csv_route->getRoute();
 
     QPen wp_border = QPen(Qt::red, 3);
     wp_border.setCosmetic(true);
 
-    QPen wp_line = QPen(Qt::darkRed, 3);
     wp_line.setCosmetic(true);
     wp_line.setCapStyle(Qt::RoundCap);
 
@@ -372,8 +366,42 @@ void MainWindow::updateElementsOnScene(int prevFc) // for updated m_fcPtr
     }
 }
 
-void MainWindow::on_actionInfo_Panel_triggered()
+void MainWindow::on_actionInfo_Panel_triggered ()
 {
     m_infoPanel->show();
+}
+
+
+void MainWindow::on_actionGetOptimizedCSV_triggered ()
+{
+    QString fName = QFileDialog::getOpenFileName(this, "FileName", path.curr_dir, path.filter);
+
+//    delete optRoute;
+    // download files from backend
+    // save 1st file (krup file) to memory
+    // plot weather data
+    // save 2nd file (CSV file) to memory
+    // plot optimized route
+    optRoute = new CsvRoute(fName);
+    QPen wp_line = QPen(Qt::darkGreen, 3);
+    addCsvRoutePlot(optRoute, wp_line);
+}
+
+
+void MainWindow::on_actionUploadInitCSV_triggered ()
+{
+    QString fName = QFileDialog::getOpenFileName(this, "FileName", path.curr_dir, path.filter);
+
+    // Initialize route
+    origRoute = new CsvRoute(fName);
+    QPen wp_line = QPen(Qt::darkRed, 3);
+    addCsvRoutePlot(origRoute, wp_line);
+
+    /* Upload to back-end
+     *
+     *
+     *
+     *
+     */
 }
 

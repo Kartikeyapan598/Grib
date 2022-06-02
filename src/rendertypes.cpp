@@ -3,6 +3,7 @@
 
 #include "Utils.h"
 #include "mainwindow.h"
+#include "infopanel.h"
 
 RenderTypes::RenderTypes(QWidget *parent) :
     QDialog(parent), ui(new Ui::RenderTypes), m_wind(true)
@@ -50,9 +51,10 @@ bool RenderTypes::MultiHeightBoxWarning(bool a, bool b, bool c)
 void RenderTypes::on_SHeightWindSwellBox_clicked()
 {
     MainWindow& instance = MainWindow::GetMainWindowInstance();
+    InfoPanel& info_instance = InfoPanel::getInfoPanelInstance();
 
     if (ui->SHeightWindSwellBox->isChecked())
-    {
+    {        
         if (instance.windWaveHtOnScene())
             instance.getPlotter(instance.getForecastPtr()).removeWindWaveHtColorPlot();
 
@@ -72,6 +74,14 @@ void RenderTypes::on_SHeightWindSwellBox_clicked()
 
         instance.getPlotter(instance.getForecastPtr()).addWaveSigHtColorPlot();
         instance.setWaveSigHtOnScene(true);
+
+        if (info_instance.getWindScaleInfo())
+        {
+            info_instance.setWindScaleInfo(false);
+            info_instance.removeWindColourScale();
+            info_instance.addWaveColourScale();
+            info_instance.setWaveScaleInfo(true);
+        }
     }
     else
     {
@@ -85,7 +95,9 @@ void RenderTypes::on_SHeightWindSwellBox_clicked()
 void RenderTypes::on_SwellWaveHeightBox_clicked()
 {
     MainWindow& instance = MainWindow::GetMainWindowInstance();
-    if(ui->SwellWaveHeightBox->isChecked())
+    InfoPanel& info_instance = InfoPanel::getInfoPanelInstance();
+
+    if (ui->SwellWaveHeightBox->isChecked())
     {
         if (instance.windWaveHtOnScene())
             instance.getPlotter(instance.getForecastPtr()).removeWindWaveHtColorPlot();
@@ -106,6 +118,14 @@ void RenderTypes::on_SwellWaveHeightBox_clicked()
 
         instance.getPlotter(instance.getForecastPtr()).addSwellWaveHtColorPlot();
         instance.setSwellWaveHtOnScene(true);
+
+        if (info_instance.getWindScaleInfo())
+        {
+            info_instance.setWindScaleInfo(false);
+            info_instance.removeWindColourScale();
+            info_instance.addWaveColourScale();
+            info_instance.setWaveScaleInfo(true);
+        }
     }
     else
     {
@@ -119,7 +139,8 @@ void RenderTypes::on_SwellWaveHeightBox_clicked()
 void RenderTypes::on_WindWaveHeightBox_clicked()
 {
     MainWindow& instance = MainWindow::GetMainWindowInstance();
-    if(ui->WindWaveHeightBox->isChecked())
+    InfoPanel& info_instance = InfoPanel::getInfoPanelInstance();
+    if (ui->WindWaveHeightBox->isChecked())
     {
         if (instance.waveSigHtOnScene())
             instance.getPlotter(instance.getForecastPtr()).removeWaveSigHtColorPlot();
@@ -140,6 +161,14 @@ void RenderTypes::on_WindWaveHeightBox_clicked()
 
         instance.getPlotter(instance.getForecastPtr()).addWindWaveHtColorPlot();
         instance.setWindWaveHtOnScene(true);
+
+        if (info_instance.getWindScaleInfo())
+        {
+            info_instance.setWindScaleInfo(false);
+            info_instance.removeWindColourScale();
+            info_instance.addWaveColourScale();
+            info_instance.setWaveScaleInfo(true);
+        }
     }
     else
     {
@@ -205,7 +234,9 @@ void RenderTypes::on_WindWaveDirectionBox_clicked()
 void RenderTypes::on_WindSpeedColorBox_clicked()
 {
     MainWindow& instance = MainWindow::GetMainWindowInstance();
-    if(ui->WindSpeedColorBox->isChecked())
+    InfoPanel& info_instance = InfoPanel::getInfoPanelInstance();
+
+    if (ui->WindSpeedColorBox->isChecked())
     {
         if (instance.windWaveArrowsOnScene())
             instance.getPlotter(instance.getForecastPtr()).removeWindWaveHtColorPlot();
@@ -226,6 +257,14 @@ void RenderTypes::on_WindSpeedColorBox_clicked()
 
         instance.getPlotter(instance.getForecastPtr()).addWindColorPlot();
         instance.setWindSpeedOnScene(true);
+
+        if (info_instance.getWaveScaleInfo())
+        {
+            info_instance.setWaveScaleInfo(false);
+            info_instance.removeWaveColourScale();
+            info_instance.addWindColourScale();
+            info_instance.setWindScaleInfo(true);
+        }
     }
     else
     {

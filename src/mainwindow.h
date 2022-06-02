@@ -18,7 +18,7 @@
 #include <vector>
 #include "data.h"
 #include "plotter.h"
-#include "csvroutes.h"
+#include "csvroute.h"
 #include "infopanel.h"
 
 using namespace std;
@@ -51,7 +51,7 @@ public:
     time_t getRefDt () const { return gridData->getRefDate(); }
     int getNbFc () const { return gridData->getNbForecasts(); }
 
-    void addCsvRoutePlot();
+
 
     bool windSpeedOnScene() {return isWindSpeedOnScene;}
     bool windArrowsOnScene() { return areWindArrowsOnScene; }
@@ -84,12 +84,15 @@ private slots:
     void on_actionRenderTypes_triggered ();
     void on_actionOpen_triggered ();
     void on_actionClose_triggered ();
-    void on_actionSave_triggered ();
     void on_actionDownLoad_File_triggered ();
 
     void on_actionUpload_CSV_triggered();
 
     void on_actionInfo_Panel_triggered();
+
+    void on_actionGetOptimizedCSV_triggered();
+
+    void on_actionUploadInitCSV_triggered();
 
 private:
 
@@ -97,7 +100,7 @@ private:
     void wheelEvent (QWheelEvent *event);
 
     void    drawGrid();
-
+    void addCsvRoutePlot(CsvRoute* csv_route, QPen wp_line);
     void friend InfoPanel::setForecastPtr(int newPtr);
 
 
@@ -126,7 +129,8 @@ private:
 
     QString fileName;
     GridData* gridData;
-    CsvRoutes* routes;
+    CsvRoute* origRoute;
+    CsvRoute* optRoute;
     vector<Plotter*> m_plotters;
     int m_fcPtr;
 
